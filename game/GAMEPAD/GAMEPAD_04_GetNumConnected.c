@@ -63,11 +63,6 @@ int DECOMP_GAMEPAD_GetNumConnected(struct GamepadSystem *gGamepads)
 		}
 	}
 
-#ifdef USE_4PADTEST
-	numConnected = 4;
-	bitwiseConnected = 0xF;
-#endif
-
 
 	gGamepads->numGamepadsConnected = numConnected;
 

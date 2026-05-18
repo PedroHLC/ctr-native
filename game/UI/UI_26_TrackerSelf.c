@@ -248,11 +248,11 @@ LAB_8004fe8c:
 			*(int *)&p->r1 = 0x30ffffff;
 			*(int *)&p->r2 = rgb2;
 
-			sVar4 = orientation * WIDE_34(sVar6);
+			sVar4 = orientation * sVar6;
 			p->x0 = screenPosX + sVar4;
 			p->x2 = screenPosX + sVar4;
 
-			sVar4 = orientation * WIDE_34(sVar18);
+			sVar4 = orientation * sVar18;
 			p->x1 = screenPosX + sVar4;
 
 			p->y0 = screenPosY - (sVar5 + 12);

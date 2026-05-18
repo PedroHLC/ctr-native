@@ -59,10 +59,6 @@ int DECOMP_MainDB_GetClipSize(u_int levelID, int numPlyrCurrGame)
 	if (levelID >= NITRO_COURT)
 		return 2400; // 18-24
 
-#if defined(USE_LEVELDEV) || defined(USE_LEVELDISC)
-	return 3000;
-#endif
-
 	// 0 - 17
 	return (int)clipSizeArr[levelID] * 100;
 }

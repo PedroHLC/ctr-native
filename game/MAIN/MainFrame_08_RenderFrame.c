@@ -57,10 +57,8 @@ void DECOMP_MainFrame_RenderFrame(struct GameTracker *gGT, struct GamepadSystem 
 	DECOMP_ElimBG_HandleState(gGT);
 
 #ifndef REBUILD_PS1
-#ifndef USE_HIGHMP
 	if ((gGT->renderFlags & 0x21) != 0)
 		MainFrame_VisMemFullFrame(gGT, gGT->level1);
-#endif
 #endif
 
 
@@ -69,12 +67,7 @@ void DECOMP_MainFrame_RenderFrame(struct GameTracker *gGT, struct GamepadSystem 
 			if (lev != 0)
 				DECOMP_CTR_CycleTex_LEV(lev->ptr_anim_tex, gGT->timer);
 
-	if (
-#ifdef USE_PROFILER
-	    ((gGT->gameMode1 & DEBUG_MENU) != 0) ||
-#endif
-
-	    (sdata->ptrActiveMenu != 0) || ((gGT->gameMode1 & END_OF_RACE) != 0))
+	if ((sdata->ptrActiveMenu != 0) || ((gGT->gameMode1 & END_OF_RACE) != 0))
 	{
 		DECOMP_RECTMENU_CollectInput();
 	}
@@ -91,17 +84,6 @@ void DECOMP_MainFrame_RenderFrame(struct GameTracker *gGT, struct GamepadSystem 
 	RenderAllWeather(gGT);
 	RenderAllConfetti(gGT);
 	RenderAllStars(gGT);
-
-#ifdef USE_DECALMP // OG game
-	if ((gGT->renderFlags & 0x100) != 0)
-	{
-		if (gGT->numPlyrCurrGame > 1)
-		{
-			void DecalMP_01(struct GameTracker * gGT);
-			DecalMP_01(gGT);
-		}
-	}
-#endif
 #endif
 
 	RenderAllHUD(gGT);
@@ -117,17 +99,6 @@ void DECOMP_MainFrame_RenderFrame(struct GameTracker *gGT, struct GamepadSystem 
 	RenderBucket_QueueAllInstances(gGT);
 	RenderAllNormalParticles(gGT);
 	RenderDispEnv_World(gGT); // == RenderDispEnv_World ==
-
-#ifdef USE_DECALMP // OG game
-	if ((gGT->renderFlags & 0x100) != 0)
-	{
-		if (gGT->numPlyrCurrGame > 1)
-		{
-			void DecalMP_02(struct GameTracker * gGT);
-			DecalMP_02(gGT);
-		}
-	}
-#endif
 
 	RenderAllFlag0x40(gGT); // I need a better name
 	RenderAllTitleDPP(gGT);
@@ -145,22 +116,8 @@ void DECOMP_MainFrame_RenderFrame(struct GameTracker *gGT, struct GamepadSystem 
 	{
 		RenderDispEnv_World(gGT); // == RenderDispEnv_World ==
 
-// Instance profiler
-#ifdef USE_PROFILER
-		void DebugProfiler_SectionStart(char *name, char r, char g, char b);
-		DebugProfiler_SectionStart(0, 0, 0xFF, 0);
-#endif
-
 		void TEST_DrawInstances(struct GameTracker * gGT);
 		TEST_DrawInstances(gGT);
-
-// Instance Profiler
-#ifdef USE_PROFILER
-		int DebugProfiler_SectionEnd();
-		// int x =
-		DebugProfiler_SectionEnd();
-// printf("Retail Instance: %d\n", x);
-#endif
 	}
 #endif
 
@@ -174,12 +131,6 @@ void DECOMP_MainFrame_RenderFrame(struct GameTracker *gGT, struct GamepadSystem 
 
 #else
 
-// Level profiler
-#ifdef USE_PROFILER
-		void DebugProfiler_SectionStart(char *name, char r, char g, char b);
-		DebugProfiler_SectionStart(0, 0, 0, 0xFF);
-#endif
-
 		for (int i = 0; i < gGT->numPlyrCurrGame; i++)
 		{
 			// 226-229
@@ -191,28 +142,11 @@ void DECOMP_MainFrame_RenderFrame(struct GameTracker *gGT, struct GamepadSystem 
 			TEST_DrawSkybox(gGT->level1->ptr_skybox, &gGT->pushBuffer[i], &gGT->backBuffer->primMem);
 		}
 
-// Level Profiler
-#ifdef USE_PROFILER
-		int DebugProfiler_SectionEnd();
-		DebugProfiler_SectionEnd();
-#endif
-
 #endif
 
 		RenderDispEnv_World(gGT); // == RenderDispEnv_World ==
 
 		MultiplayerWumpaHUD(gGT);
-
-#ifdef USE_DECALMP
-		if ((gGT->renderFlags & 0x100) != 0)
-		{
-			if (gGT->numPlyrCurrGame > 1)
-			{
-				void DecalMP_03(struct GameTracker * gGT);
-				DecalMP_03(gGT);
-			}
-		}
-#endif
 
 		if (
 		    // if not cutscene
@@ -260,43 +194,15 @@ void DECOMP_MainFrame_RenderFrame(struct GameTracker *gGT, struct GamepadSystem 
 	// clear swapchain
 	if (((gGT->renderFlags & 0x2000) != 0) && ((lev->clearColor[0].enable != 0) || (lev->clearColor[1].enable != 0)))
 	{
-// 60fps NGin Labs test
-#ifndef USE_REAL60PS1
 		DECOMP_CAM_ClearScreen(gGT);
-#endif
 	}
 
 	if ((gGT->renderFlags & 0x1000) != 0)
 	{
-// RaceFlag_DrawSelf profiler
-#ifdef USE_PROFILER
-		void DebugProfiler_SectionStart(char *name, char r, char g, char b);
-		DebugProfiler_SectionStart(0, 0xFF, 0, 0xFF);
-#endif
-
 		DECOMP_RaceFlag_DrawSelf();
-
-// RaceFlag_DrawSelf Profiler
-#ifdef USE_PROFILER
-		int DebugProfiler_SectionEnd();
-		DebugProfiler_SectionEnd();
-#endif
 	}
 
 	RenderDispEnv_UI(gGT);
-
-// requires USE_PROFILER,
-// only for NGin Labs
-#ifdef USE_REAL60PS1
-	void DbgOptimizeFrameForGpuBottleneck();
-	DbgOptimizeFrameForGpuBottleneck();
-#endif
-
-// VSYNC profiler
-#ifdef USE_PROFILER
-	void DebugProfiler_SectionStart(char *name, char r, char g, char b);
-	DebugProfiler_SectionStart(0, 0, 0, 0);
-#endif
 
 	RenderVSYNC(gGT);
 
@@ -313,11 +219,6 @@ void DrawUnpluggedMsg(struct GameTracker *gGT, struct GamepadSystem *gGamepads)
 	int lngArrStart;
 	RECT window;
 	int i;
-
-#ifdef USE_PROFILER
-	// cause it annoys me when I'm busy
-	return;
-#endif
 
 	// dont draw error if demo mode, or cutscene,
 	// or if no controllers are missing currently
@@ -874,21 +775,7 @@ void RenderBucket_ExecuteAllInstances(struct GameTracker *gGT)
 	if ((gGT->renderFlags & 0x20) == 0)
 		return;
 
-// Instance profiler
-#ifdef USE_PROFILER
-	void DebugProfiler_SectionStart(char *name, char r, char g, char b);
-	DebugProfiler_SectionStart(0, 0, 0xFF, 0);
-#endif
-
 	RenderBucket_Execute(gGT->ptrRenderBucketInstance, &gGT->backBuffer->primMem);
-
-// Instance Profiler
-#ifdef USE_PROFILER
-	int DebugProfiler_SectionEnd();
-	// int x =
-	DebugProfiler_SectionEnd();
-// printf("Retail Instance: %d\n", x);
-#endif
 }
 
 void RenderAllTires(struct GameTracker *gGT)
@@ -934,153 +821,6 @@ void RenderAllHeatParticles(struct GameTracker *gGT)
 	Torch_Main(gGT->particleList_heatWarp, &gGT->pushBuffer[0], &gGT->backBuffer->primMem, gGT->numPlyrCurrGame, gGT->swapchainIndex * 0x128);
 }
 
-#ifdef USE_HIGHMP
-
-void RenderAllLevelGeometry(struct GameTracker *gGT)
-{
-	int i;
-	int distToScreen;
-	int numPlyrCurrGame;
-	struct Level *level1;
-	struct PushBuffer *pushBuffer;
-	struct mesh_info *ptr_mesh_info;
-
-	level1 = gGT->level1;
-	if (level1 == 0)
-		return;
-
-	ptr_mesh_info = level1->ptr_mesh_info;
-	if (ptr_mesh_info == 0)
-		return;
-
-	numPlyrCurrGame = gGT->numPlyrCurrGame;
-
-	// === Temporary 60FPS macros ===
-	// Emulate 30fps on 60fps for SCVert and OVert
-
-	// if no SCVert
-	if ((level1->configFlags & 4) == 0)
-	{
-		// assume OVert (no primitives generated here)
-		AnimateWater1P(gGT->timer, level1->numWaterVertices, level1->ptr_water, level1->ptr_tex_waterEnvMap, gGT->visMem1->visOVertList[0]);
-	}
-
-	// if SCVert
-	else
-	{
-		// draw SCVert (no primitives generated here
-		AnimateQuad(gGT->timer << 7, level1->numSCVert, level1->ptrSCVert, gGT->visMem1->visSCVertList[0]);
-	}
-
-	if (
-	    // adv character selection screen
-	    (gGT->levelID == ADVENTURE_GARAGE) ||
-
-	    // cutscene that's not Crash Bandicoot intro
-	    // where he's sleeping and snoring on a hill
-	    (((gGT->gameMode1 & GAME_CUTSCENE) != 0) && (gGT->levelID != INTRO_CRASH)))
-	{
-		// relationship between near-clip and far-clip,
-		// for each RenderList LOD set in the level
-		*(int *)0x1f800014 = 0x1e00;
-		*(int *)0x1f800018 = 0x640;
-		*(int *)0x1f80001c = 0x640;
-		*(int *)0x1f800020 = 0x500;
-		*(int *)0x1f800024 = 0x280;
-		*(int *)0x1f800028 = 0x140;
-		*(int *)0x1f80002c = 0x640 + 0x140;
-	}
-
-	// every non-cutscene,
-	// except for Crash Bandicoot intro
-	else
-	{
-		// 0x1c2 in 1P mode
-		distToScreen = gGT->pushBuffer[0].distanceToScreen_PREV;
-
-		// int and unsigned int have specific purposes
-		*(unsigned int *)0x1f800014 = distToScreen * 0x2080;
-		if (*(int *)0x1f800014 < 0)
-			*(int *)0x1f800014 = *(int *)0x1f800014 + 0xff;
-		*(int *)0x1f800014 = *(int *)0x1f800014 >> 8; // 0x3921
-
-		*(int *)0x1f800018 = distToScreen * 0x1a;        // 0x2DB4
-		*(int *)0x1f80001c = distToScreen * 0x18;        // 0x2A30
-		*(int *)0x1f800020 = distToScreen * 0xc;         // 0x1518
-		*(int *)0x1f800024 = distToScreen * 7;           // 0xC4E
-		*(int *)0x1f80002c = *(int *)0x1f800018 + 0x140; // 0x2EF4
-
-		// int and unsigned int have specific purposes
-		*(unsigned int *)0x1f800028 = distToScreen * 0x380;
-		if (*(int *)0x1f800028 < 0)
-			*(int *)0x1f800028 = *(int *)0x1f800028 + 0xff;
-		*(int *)0x1f800028 = *(int *)0x1f800028 >> 8; // 0x627
-	}
-
-	// backup
-	struct Driver *d0 = gGT->drivers[0];
-	struct CameraDC dc0;
-	memcpy(&dc0, &gGT->cameraDC[0], sizeof(struct CameraDC));
-
-// Level profiler
-#ifdef USE_PROFILER
-	void DebugProfiler_SectionStart(char *name, char r, char g, char b);
-	DebugProfiler_SectionStart(0, 0, 0, 0xFF);
-#endif
-
-	for (int i = 0; i < numPlyrCurrGame; i++)
-	{
-		pushBuffer = &gGT->pushBuffer[i];
-
-		CTR_ClearRenderLists_1P2P(gGT, 1);
-
-		RenderLists_PreInit();
-
-		if (i != 0)
-		{
-			gGT->drivers[0] = gGT->drivers[i];
-			memcpy(&gGT->cameraDC[0], &gGT->cameraDC[i], sizeof(struct CameraDC));
-		}
-
-		int backup = gGT->numPlyrCurrGame;
-		gGT->numPlyrCurrGame = 1;
-		if ((gGT->renderFlags & 0x21) != 0)
-			MainFrame_VisMemFullFrame(gGT, gGT->level1);
-		gGT->numPlyrCurrGame = backup;
-
-		// patch RenderLists_Init1P2P to have max LOD
-		*(short *)0x80070090 = 0;
-		*(short *)0x80070092 = 0x3408;
-
-		RenderLists_Init1P2P(ptr_mesh_info->bspRoot, level1->visMem->visLeafList[0], pushBuffer, &gGT->LevRenderLists[0], level1->visMem->bspList[0],
-		                     numPlyrCurrGame);
-
-		// 226-229
-		DrawLevelOvr1P(&gGT->LevRenderLists[0], pushBuffer, ptr_mesh_info, &gGT->backBuffer->primMem, gGT->visMem1->visFaceList[0],
-		               level1->ptr_tex_waterEnvMap); // waterEnvMap?
-
-		DrawSky_Full(level1->ptr_skybox, pushBuffer, &gGT->backBuffer->primMem);
-
-		// skybox gradient
-		if ((level1->configFlags & 1) != 0)
-		{
-			CAM_SkyboxGlow(&level1->glowGradient[0], pushBuffer, &gGT->backBuffer->primMem, &pushBuffer->ptrOT[0x3ff]);
-		}
-	}
-
-// Level Profiler
-#ifdef USE_PROFILER
-	int DebugProfiler_SectionEnd();
-	DebugProfiler_SectionEnd();
-#endif
-
-	// restore
-	gGT->drivers[0] = d0;
-	memcpy(&gGT->cameraDC[0], &dc0, sizeof(struct CameraDC));
-}
-
-#else
-
 void RenderAllLevelGeometry(struct GameTracker *gGT)
 {
 	int i;
@@ -1102,12 +842,6 @@ void RenderAllLevelGeometry(struct GameTracker *gGT)
 
 	if (numPlyrCurrGame == 1)
 	{
-// Level profiler
-#ifdef USE_PROFILER
-		void DebugProfiler_SectionStart(char *name, char r, char g, char b);
-		DebugProfiler_SectionStart(0, 0, 0, 0xFF);
-#endif
-
 		CTR_ClearRenderLists_1P2P(gGT, 1);
 
 		// === Temporary 60FPS macros ===
@@ -1156,11 +890,6 @@ void RenderAllLevelGeometry(struct GameTracker *gGT)
 			// 0x1c2 in 1P mode
 			distToScreen = pushBuffer->distanceToScreen_PREV;
 
-#ifdef USE_REAL60PS1
-			// lower LOD in distance
-			distToScreen = 0x20;
-#endif
-
 			// int and unsigned int have specific purposes
 			*(unsigned int *)0x1f800014 = distToScreen * 0x2080;
 			if (*(int *)0x1f800014 < 0)
@@ -1192,12 +921,6 @@ void RenderAllLevelGeometry(struct GameTracker *gGT)
 
 		DrawSky_Full(level1->ptr_skybox, pushBuffer, &gGT->backBuffer->primMem);
 
-// Level Profiler
-#ifdef USE_PROFILER
-		int DebugProfiler_SectionEnd();
-		DebugProfiler_SectionEnd();
-#endif
-
 		// skybox gradient
 		if ((level1->configFlags & 1) != 0)
 		{
@@ -1209,12 +932,6 @@ void RenderAllLevelGeometry(struct GameTracker *gGT)
 
 	if (numPlyrCurrGame == 2)
 	{
-// Level profiler
-#ifdef USE_PROFILER
-		void DebugProfiler_SectionStart(char *name, char r, char g, char b);
-		DebugProfiler_SectionStart(0, 0, 0, 0xFF);
-#endif
-
 		CTR_ClearRenderLists_1P2P(gGT, 2);
 
 		// if no SCVert
@@ -1239,20 +956,8 @@ void RenderAllLevelGeometry(struct GameTracker *gGT)
 		               gGT->visMem1->visFaceList[1],
 		               level1->ptr_tex_waterEnvMap); // waterEnvMap?
 
-// Level Profiler
-#ifdef USE_PROFILER
-		int DebugProfiler_SectionEnd();
-		DebugProfiler_SectionEnd();
-#endif
-
 		goto SkyboxGlow;
 	}
-
-// Level profiler
-#ifdef USE_PROFILER
-	void DebugProfiler_SectionStart(char *name, char r, char g, char b);
-	DebugProfiler_SectionStart(0, 0, 0, 0xFF);
-#endif
 
 	// 3P or 4P
 	CTR_ClearRenderLists_3P4P(gGT, numPlyrCurrGame);
@@ -1300,12 +1005,6 @@ void RenderAllLevelGeometry(struct GameTracker *gGT)
 		               level1->ptr_tex_waterEnvMap); // waterEnvMap?
 	}
 
-// Level Profiler
-#ifdef USE_PROFILER
-	int DebugProfiler_SectionEnd();
-	DebugProfiler_SectionEnd();
-#endif
-
 SkyboxGlow:
 
 	// skybox gradient
@@ -1318,25 +1017,10 @@ SkyboxGlow:
 	return;
 }
 
-#endif // USE_HIGHMP
-
 #endif // Rebuild_PS1
 
 void MultiplayerWumpaHUD(struct GameTracker *gGT)
 {
-#ifdef USE_DECALMP
-
-	// OG game code
-	if ((gGT->hudFlags & 1) == 0)
-		return;
-	if (gGT->numPlyrCurrGame < 2)
-		return;
-
-	void UI_RenderFrame_Wumpa3D_2P3P4P(struct GameTracker * gGT);
-	UI_RenderFrame_Wumpa3D_2P3P4P(gGT);
-
-#else
-
 	if ((gGT->hudFlags & 1) == 0)
 		return;
 
@@ -1355,8 +1039,6 @@ void MultiplayerWumpaHUD(struct GameTracker *gGT)
 			instFruitDisp->scale[2] = 0;
 		}
 	}
-
-#endif
 }
 
 void WindowBoxLines(struct GameTracker *gGT)
@@ -1604,11 +1286,6 @@ void RenderSubmit(struct GameTracker *gGT)
 	gGT->bool_DrawOTag_InProgress = 1;
 
 	void *ot = &gGT->pushBuffer[0].ptrOT[0x3ff];
-
-#ifdef USE_PROFILER
-	void DebugProfiler_DrawOTag();
-	DebugProfiler_DrawOTag();
-#endif
 
 	DrawOTag(ot);
 

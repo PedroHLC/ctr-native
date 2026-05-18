@@ -90,44 +90,6 @@ void UI_Map_DrawMap_ExtraFunc(struct Icon *icon, POLY_FT4 *p, short posX, short 
 	// letftX is the left side
 	leftX = posX - sizeX;
 
-#ifdef USE_16BY9
-
-	// 12% size
-	short len = (sizeX * 125) / 1000;
-
-	if ((sdata->gGT->gameMode1 & 0x2000) != 0)
-	{
-		// 12% from each side
-		leftX += len;
-		posX -= len;
-	}
-
-	else
-	{
-		// Must scale around 3D->2D origin,
-		// Otherwise we'd never get the map
-		// and icons to scale together
-
-		void **pointers = ST1_GETPOINTERS(sdata->gGT->level1->ptrSpawnType1);
-		void *levPtrMap = pointers[ST1_MAP];
-
-		int midX = 0;
-		int midY = 0;
-		DECOMP_UI_Map_GetIconPos(levPtrMap, &midX, &midY);
-
-		leftX += ((midX - leftX) * 250) / 1000;
-		posX -= ((posX - midX) * 250) / 1000;
-
-		if (sdata->gGT->numPlyrCurrGame == 1)
-		{
-			// 462 is midX of Crash Cove
-			leftX += ((462 - midX) / 4) + 5;
-			posX += ((462 - midX) / 4) + 5;
-		}
-	}
-
-#endif
-
 	p->x0 = leftX;
 	p->x1 = posX;
 	p->x2 = leftX;

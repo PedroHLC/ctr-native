@@ -23,7 +23,7 @@ void DECOMP_CDSYS_SetXAToLang(int lang)
 	void *ptrDst = 0;
 
 // store in EXE memory, to save heap space
-#if !defined(REBUILD_PS1) && !defined(USE_RAMEX)
+#if !defined(REBUILD_PS1)
 	void RelocMemory_DefragUI_Mods1_XNF();
 	ptrDst = RelocMemory_DefragUI_Mods1_XNF;
 #endif

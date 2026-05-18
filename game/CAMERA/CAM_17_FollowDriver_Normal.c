@@ -529,10 +529,7 @@ LAB_8001ab04:
 
 			// Conditions to skip:
 			if (
-#if defined(USE_LEVELDEV) || defined(USE_LEVELDISC)
-			    // 7 pointers, NULL camera (custom levels)
-			    (x == 0) ||
-#endif
+
 
 			    // No camera + No ghosts (battle maps)
 			    (st1->count < 4) ||

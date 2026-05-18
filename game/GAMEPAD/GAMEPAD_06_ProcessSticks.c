@@ -14,18 +14,13 @@ void DECOMP_GAMEPAD_ProcessSticks(struct GamepadSystem *gGamepads)
 	struct ControllerPacket *packet;
 	struct RacingWheelData *rwd;
 
-#ifdef USE_4PADTEST
-	packet = gGamepads->gamepad[0].ptrControllerPacket;
-#endif
 
 	// for RWD
 	int i;
 
 	for (pad = &gGamepads->gamepad[0], rwd = &data.rwd[0], i = 0; pad < &gGamepads->gamepad[8]; pad++, rwd++, i++)
 	{
-#ifndef USE_4PADTEST
 		packet = pad->ptrControllerPacket;
-#endif
 
 		// wipe to default
 		pad->rwd = NULL;
@@ -134,9 +129,5 @@ void DECOMP_GAMEPAD_ProcessSticks(struct GamepadSystem *gGamepads)
 			pad->stickLX = 0;
 		if ((held & 8) != 0)
 			pad->stickLX = 0xFF;
-
-#ifdef USE_REAL60PS1
-		break;
-#endif
 	}
 }

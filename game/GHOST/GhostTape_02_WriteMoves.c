@@ -15,11 +15,6 @@ void DECOMP_GhostTape_WriteMoves(short raceFinished)
 	struct GameTracker *gGT = sdata->gGT;
 	u_int gameMode = gGT->gameMode1;
 
-// NGin Labs 60fps test
-#ifdef USE_REAL60PS1
-	return;
-#endif
-
 	if (raceFinished == 0)
 	{
 		// if you can not save ghost

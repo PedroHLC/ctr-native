@@ -69,7 +69,7 @@ void DECOMP_RECTMENU_DrawInnerRect(RECT *r, int type, void *ot)
 	// Draw shadow under the menu
 	if ((type & 4) == 0)
 	{
-		short horizontalOffset = ((type & 0x80) != 0) ? WIDE_34(4) : WIDE_34(0xc);
+		short horizontalOffset = ((type & 0x80) != 0) ? 4 : 0xc;
 		short verticalOffset = ((type & 0x40) != 0) ? 2 : 6;
 
 		adjustedRect.x = r->x + r->w;

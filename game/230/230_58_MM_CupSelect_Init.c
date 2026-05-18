@@ -10,9 +10,4 @@ void DECOMP_MM_CupSelect_Init(void)
 	// reset transition data
 	D230.cupSel_transitionState = 0;
 	D230.cupSel_transitionFrames = 0xc;
-
-#ifdef USE_NEWCUPS
-	void CustomCups_Init();
-	CustomCups_Init();
-#endif
 }

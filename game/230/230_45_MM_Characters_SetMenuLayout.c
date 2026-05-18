@@ -17,47 +17,15 @@ void DECOMP_MM_Characters_SetMenuLayout(void)
 
 	iVar3 = numPlyrNextGame - 1;
 
-#ifndef USE_OXIDE
-// original game
+	// original game
 #define NUM_ICONS 0xF
-#else
-// modded game
-#define NUM_ICONS 0x10
-	D230.ptrCsmArr[0] = &OXIDE_icons1p2p[0];
-	D230.ptrCsmArr[1] = &OXIDE_icons1p2p[0];
-	D230.ptrCsmArr[2] = &OXIDE_icons3p[0];
-	D230.ptrCsmArr[3] = &OXIDE_icons4p[0];
-	D230.ptrCsmArr[4] = &OXIDE_icons1p2pLimited[0];
-	D230.ptrCsmArr[5] = &OXIDE_icons1p2pLimited[0];
-
-
-	// struct Model* m = sdata->PLYROBJECTLIST[18];
-	struct Model *MM_Characters_GetModelByID(int id);
-	struct Model *m = MM_Characters_GetModelByID(0xf);
-
-	// modified scale, 5/8 size -- ((orig * 5) >> 3)
-	m->headers[0].scale[0] = 0x896;
-	m->headers[0].scale[1] = 0x809;
-	m->headers[0].scale[2] = 0xADC;
-
-	m->headers[0].ptrAnimations[0] = m->headers[0].ptrAnimations[1];
-#endif
 
 	// Loop through bottom characters,
 	// if any are unlocked, use expanded
 	for (i = 0xc; i < NUM_ICONS; i++)
 	{
-#ifdef USE_OXIDE
-
-		// modded
-		unlocked = D230.ptrCsmArr[0][i].unlockFlags;
-
-#else
-
 		// OG game code
 		unlocked = D230.csm_1P2P[i].unlockFlags;
-
-#endif
 
 		if ((sdata->gameProgress.unlocks[0] >> unlocked & 1) != 0)
 		{

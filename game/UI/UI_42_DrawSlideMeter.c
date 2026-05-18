@@ -3,7 +3,7 @@
 void DECOMP_UI_DrawSlideMeter(short posX, short posY, struct Driver *driver)
 {
 	const struct GameTracker *gGT = sdata->gGT;
-	const int barWidth = WIDE_34(49);
+	const int barWidth = 49;
 	int barHeight = gGT->numPlyrCurrGame > 2 ? 3 : 7;
 
 	int meterLength = 0;
@@ -56,9 +56,4 @@ void DECOMP_UI_DrawSlideMeter(short posX, short posY, struct Driver *driver)
 		colorCode = MakeColorCode(0x80, 0x80, 0x80, primCode); // Gray color for background bar
 		meterLength = barWidth;
 	}
-
-#ifdef USE_BOOSTBAR
-	void DrawBoostBar(short posX, short posY, struct Driver *driver);
-	DrawBoostBar(posX, posY + 5, driver);
-#endif
 }

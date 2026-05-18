@@ -91,14 +91,6 @@ void DECOMP_MM_CupSelect_MenuProc(struct RectMenu *menu)
 		}
 	}
 
-#ifdef USE_NEWCUPS
-	if (D230.cupSel_transitionState != 2)
-	{
-		void CustomCups_MenuProc(struct RectMenu * menu);
-		CustomCups_MenuProc(menu);
-	}
-#endif
-
 	D230.cupSel_transitionFrames = elapsedFrames;
 
 	// "SELECT CUP RACE"
@@ -156,19 +148,6 @@ void DECOMP_MM_CupSelect_MenuProc(struct RectMenu *menu)
 		{
 			int posX = (startX + (trackIndex & 1) * 0x54);
 			int posY = (startY + (trackIndex >> 1) * 0x23);
-
-#ifdef USE_16BY9
-			if (trackIndex & 1)
-			{
-				// right icons move 12% of 0x54, to the left
-				posX -= 10;
-			}
-			else
-			{
-				// left icons move 12% of 0x54, to the right
-				posX += 10;
-			}
-#endif
 
 			// Draw Icon of each track
 			DECOMP_RECTMENU_DrawPolyGT4(gGT->ptrIcons[data.ArcadeCups[cupIndex].CupTrack[trackIndex].iconID], posX, posY, &gGT->backBuffer->primMem,

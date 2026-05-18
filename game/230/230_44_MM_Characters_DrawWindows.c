@@ -141,12 +141,6 @@ void DECOMP_MM_Characters_DrawWindows(int boolShowDrivers)
 		uVar4 = MM_Characters_GetModelByID(*ptrCurr);
 #endif
 
-#ifdef USE_OXIDE
-		gGT->drivers[iVar14]->wheelSize = 0xccc;
-		if (*ptrCurr == 0xf)
-			gGT->drivers[iVar14]->wheelSize = 0;
-#endif
-
 		// set modelPtr in Instance
 		iVar10->model = uVar4;
 

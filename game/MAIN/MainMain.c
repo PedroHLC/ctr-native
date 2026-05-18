@@ -39,10 +39,6 @@ u_int DECOMP_main()
 		DECOMP_LOAD_NextQueuedFile();
 		DECOMP_CDSYS_XAPauseAtEnd();
 
-#ifdef USE_LEVELDEV
-		HotReload();
-#endif
-
 		switch (sdata->mainGameState)
 		{
 		// Initialize Game (happens once)
@@ -121,13 +117,6 @@ u_int DECOMP_main()
 		// Makes up all normal interaction with the game
 		case 3:
 
-#ifdef USE_LANG
-			if ((gGT->gameMode2 & LNG_CHANGE) != 0)
-			{
-				DECOMP_LOAD_LangFile(sdata->ptrBigfileCdPos_2, gGT->langIndex);
-				gGT->gameMode2 &= ~(LNG_CHANGE);
-			}
-#endif
 			// if loading, or gameplay interrupted
 			if (sdata->Loading.stage != -1)
 			{
@@ -323,11 +312,6 @@ u_int DECOMP_main()
 			// Start new frame (ClearOTagR)
 			DECOMP_MainFrame_ResetDB(gGT);
 
-#ifdef USE_PROFILER
-			void DebugProfiler_Reset();
-			DebugProfiler_Reset();
-#endif
-
 			if (
 			    // If you're in Demo Mode
 			    (gGT->boolDemoMode != 0) &&
@@ -388,17 +372,7 @@ u_int DECOMP_main()
 
 			if ((gGT->gameMode1 & LOADING) == 0)
 			{
-#ifdef USE_PROFILER
-				void DebugProfiler_SectionStart(char *name, char r, char g, char b);
-				DebugProfiler_SectionStart(0, 0xFF, 0, 0);
-#endif
-
 				DECOMP_MainFrame_GameLogic(gGT, gGS);
-
-#ifdef USE_PROFILER
-				int DebugProfiler_SectionEnd();
-				DebugProfiler_SectionEnd();
-#endif
 			}
 
 			// If you are in demo mode
@@ -432,11 +406,9 @@ u_int DECOMP_main()
 					gGT->pushBuffer[0].rot[1] = 0;
 					gGT->pushBuffer[0].rot[2] = 0;
 
-#ifndef USE_PROFILER
 					// wait 5 seconds
 					if (gGT->timer > 30 * 5)
 						DECOMP_MainRaceTrack_RequestLoad(MAIN_MENU_LEVEL);
-#endif
 				}
 
 				int tap = gGS->gamepad[0].buttonsTapped;
@@ -589,89 +561,6 @@ __attribute__((optimize("O0"))) int GetSongTime()
 }
 #endif
 
-#ifdef USE_LEVELDEV
-void HotReloadVRAM()
-{
-	int *vramBuf = (int *)CUSTOM_VRAM_ADDR;
-	struct VramHeader *vh = (struct VramHeader *)vramBuf;
-	if (vramBuf[0] == 0x20)
-	{
-		int size = vramBuf[1];
-		vh = &vramBuf[2];
-
-		while (size != 0)
-		{
-			LoadImage(&vh->rect, VRAMHEADER_GETPIXLES(vh));
-
-			vramBuf = (int *)vh;
-			vramBuf = &vramBuf[size >> 2];
-			size = vramBuf[0];
-			vh = &vramBuf[1];
-		}
-	}
-	else
-	{
-		LoadImage(&vh->rect, VRAMHEADER_GETPIXLES(vh));
-	}
-}
-
-uint8_t MEMCARD_Save_Hook(int slotIdx, char *name, char *param_3, char *ptrData, int fileSize, unsigned int param6)
-{
-	*GHOST_SIZE_ADDR = fileSize;
-	memcpy(GHOST_ADDR, ptrData, fileSize);
-	volatile int *g_ghostReady = GHOST_READY;
-	*g_ghostReady = 1;
-	return 0;
-}
-
-void HotReload()
-{
-// asm hook
-#define JMP(dest) (((unsigned long)dest & 0x3FFFFFF) >> 2 | 0x8000000)
-	*(int *)0x8003e344 = JMP(MEMCARD_Save_Hook);
-	*(int *)0x8003e348 = 0;
-
-	volatile int *g_triggerVRMReload = TRIGGER_VRM_RELOAD;
-	if (*g_triggerVRMReload)
-	{
-		HotReloadVRAM();
-		*g_triggerVRMReload = 0;
-		return;
-	}
-
-	struct GameTracker *gGT = sdata->gGT;
-	volatile int *g_triggerHotReload = TRIGGER_HOT_RELOAD;
-	if (*g_triggerHotReload == HOT_RELOAD_LOAD && (gGT->gameMode1 & LOADING || gGT->levelID == MAIN_MENU_LEVEL))
-	{
-		*g_triggerHotReload = HOT_RELOAD_READY;
-		while (*g_triggerHotReload != HOT_RELOAD_EXEC)
-		{
-		};
-		const char *pCustomLevel = CUSTOM_LEV_ADDR;
-		const int *pCustomMap = CUSTOM_MAP_PTR_ADDR;
-		int *pMap = (int *)(pCustomLevel + *pCustomMap);
-		DECOMP_LOAD_RunPtrMap(pCustomLevel, pMap + 1, *pMap >> 2);
-		*g_triggerHotReload = HOT_RELOAD_DONE;
-		return;
-	}
-
-	if (*g_triggerHotReload != HOT_RELOAD_START || gGT->gameMode1 & LOADING)
-	{
-		return;
-	}
-
-	*g_triggerHotReload = HOT_RELOAD_LOAD;
-	if (gGT->levelID == MAIN_MENU_LEVEL)
-	{
-		return;
-	}
-	DECOMP_GhostTape_Destroy();
-	sdata->mainMenuState = 0;
-	gGT->gameMode1 |= MAIN_MENU;
-	DECOMP_MainRaceTrack_RequestLoad(MAIN_MENU_LEVEL);
-}
-#endif
-
 // by separating this, it can be
 // overwritten dynamically (oxide fix)
 void StateZero()
@@ -694,23 +583,11 @@ void StateZero()
 	SetVideoMode(0);
 	ResetCallback();
 
-#ifndef USE_RAMEX
 #define MEMPACK_SIZE 0x200000 // 2mb
-#else
-#define MEMPACK_SIZE 0x800000 // 8mb
-#endif
 
 	DECOMP_MEMPACK_Init(MEMPACK_SIZE);
 	DECOMP_LOAD_InitCD();
 	DECOMP_RaceFlag_SetFullyOffScreen();
-
-#ifdef USE_PROFILER
-	void DebugProfiler_Init();
-	DebugProfiler_Init();
-
-	void DebugMenu_Init();
-	DebugMenu_Init();
-#endif
 
 	ResetGraph(0);
 	SetGraphDebug(0);

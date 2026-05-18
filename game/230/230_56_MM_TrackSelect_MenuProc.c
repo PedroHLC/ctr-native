@@ -131,28 +131,11 @@ void DECOMP_MM_TrackSelect_MenuProc(struct RectMenu *menu)
 	selectMenu = &D230.arcadeTracks[0];
 	numTracks = 18;
 
-#ifdef USE_HIGHMP
-	numTracks = 23;
-	D230.battleTracks[0].levID = GEM_STONE_VALLEY;
-	D230.battleTracks[1].levID = N_SANITY_BEACH;
-	D230.battleTracks[2].levID = THE_LOST_RUINS;
-	D230.battleTracks[3].levID = GLACIER_PARK;
-	D230.battleTracks[4].levID = CITADEL_CITY;
-#endif
-
 	// if you are in battle mode
 	if ((gGT->gameMode1 & BATTLE_MODE) != 0)
 	{
 		selectMenu = &D230.battleTracks[0];
 		numTracks = 7;
-
-#ifdef USE_HIGHMP
-		D230.battleTracks[0].levID = NITRO_COURT;
-		D230.battleTracks[1].levID = RAMPAGE_RUINS;
-		D230.battleTracks[2].levID = PARKING_LOT;
-		D230.battleTracks[3].levID = SKULL_ROCK;
-		D230.battleTracks[4].levID = THE_NORTH_BOWL;
-#endif
 	}
 
 	currTrack = menu->rowSelected;
@@ -391,7 +374,7 @@ void DECOMP_MM_TrackSelect_MenuProc(struct RectMenu *menu)
 			}
 		}
 #endif
-		r.w = WIDE_PICK(256, 200);
+		r.w = 256;
 		r.h = 0x19;
 
 		// posX of track list
@@ -430,7 +413,7 @@ void DECOMP_MM_TrackSelect_MenuProc(struct RectMenu *menu)
 
 					struct Icon **iconPtrArray = ICONGROUP_GETICONS(gGT->iconGroup[5]);
 
-					DECOMP_DecalHUD_DrawPolyGT4(iconPtrArray[0x37], iVar11 + WIDE_PICK(256 + 4, 200 + 4), (int)sVar7 + iVar17 * 8 + 4,
+					DECOMP_DecalHUD_DrawPolyGT4(iconPtrArray[0x37], iVar11 + 256 + 4, (int)sVar7 + iVar17 * 8 + 4,
 
 					                            // pointer to PrimMem struct
 					                            &gGT->backBuffer->primMem,
@@ -487,7 +470,7 @@ void DECOMP_MM_TrackSelect_MenuProc(struct RectMenu *menu)
 					}
 
 					// "GHOST DATA EXISTS"
-					DECOMP_DecalFont_DrawLine(sdata->lngStrings[0x6B], (iVar11 + 8 + WIDE_34(0x78)), (iVar9 + 0x76), FONT_SMALL, uVar14);
+					DECOMP_DecalFont_DrawLine(sdata->lngStrings[0x6B], (iVar11 + 8 + 0x78), (iVar9 + 0x76), FONT_SMALL, uVar14);
 				}
 			}
 			q.x = r.x + 6;

@@ -52,12 +52,6 @@ void DECOMP_UI_TrackerBG(struct Icon *targetIcon, short centerX, short centerY, 
 		// if not using widescreen hacks
 		int len = 0;
 
-#ifdef USE_16BY9
-		// widescreen, need to scale X by 75%,
-		// so subtract 12% from left and 12% from right
-		len = (offsX * 125) / 1000;
-#endif
-
 		// quadIndex(0)
 		p->x0 = centerX + len;
 		p->x1 = rightX;

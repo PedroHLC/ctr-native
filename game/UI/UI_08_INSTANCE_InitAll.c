@@ -30,11 +30,6 @@ void DECOMP_UI_INSTANCE_InitAll(void)
 		// If you're in Adventure Arena
 		if ((gameMode1 & ADVENTURE_ARENA) != 0)
 		{
-#ifdef USE_HIGHMP
-			if (gGT->numPlyrCurrGame != 1)
-				return;
-#endif
-
 			// is ignoring the return value of these calls intentional?
 			DECOMP_UI_INSTANCE_BirthWithThread(0x61, (int)DECOMP_UI_ThTick_Reward, 0xe, 1, 0, /*sdata->s_relic1*/ 0);
 			DECOMP_UI_INSTANCE_BirthWithThread(99, (int)DECOMP_UI_ThTick_Reward, 0xf, 1, 0, /*sdata->s_key1*/ 0);
@@ -114,38 +109,6 @@ void DECOMP_UI_INSTANCE_InitAll(void)
 
 		// used for multiplayer wumpa
 		sdata->ptrPushBufferUI = (int)NULL;
-
-#ifdef USE_DECALMP // OG game
-		if (1 < gGT->numPlyrCurrGame)
-		{
-			struct PushBuffer *pb = &sdata->pushBuffer_DecalMP;
-			struct PushBuffer *ui = &gGT->pushBuffer_UI;
-
-			sdata->ptrPushBufferUI = (int)pb;
-
-			// second half of pixel-LOD pushBuffer, copy from PushBuffer_UI
-			*(int *)&pb->matrix_ViewProj.m[0][0] = *(int *)&ui->matrix_ViewProj.m[0][0];
-			*(int *)&pb->matrix_ViewProj.m[0][2] = *(int *)&ui->matrix_ViewProj.m[0][2];
-			*(int *)&pb->matrix_ViewProj.m[1][1] = *(int *)&ui->matrix_ViewProj.m[1][1];
-			*(int *)&pb->matrix_ViewProj.m[2][0] = *(int *)&ui->matrix_ViewProj.m[2][0];
-			*(int *)&pb->matrix_ViewProj.m[2][2] = *(int *)&ui->matrix_ViewProj.m[2][2];
-			pb->matrix_ViewProj.t[0] = ui->matrix_ViewProj.t[0];
-			pb->matrix_ViewProj.t[1] = ui->matrix_ViewProj.t[1];
-			pb->matrix_ViewProj.t[2] = ui->matrix_ViewProj.t[2];
-
-			// first half of pixel-LOD pushBuffer, copy from PushBuffer_UI
-			pb->pos[0] = ui->pos[0];
-			pb->pos[1] = ui->pos[1];
-			pb->pos[2] = ui->pos[2];
-			pb->rect.x = ui->rect.x;
-			pb->rect.y = ui->rect.y;
-			pb->rect.w = ui->rect.w;
-			pb->rect.h = ui->rect.h;
-
-			pb->ptrOT = ui->ptrOT;
-			pb->distanceToScreen_PREV = ui->distanceToScreen_PREV;
-		}
-#endif
 
 		sdata->ptrFruitDisp =
 		    (int)DECOMP_UI_INSTANCE_BirthWithThread(0x37, (int)DECOMP_UI_ThTick_CountPickup, 3, 1, sdata->ptrPushBufferUI, /*sdata->s_fruitdisp*/ 0);

@@ -260,10 +260,10 @@ void DECOMP_MM_ParseCheatCodes()
 // so store this code here
 #if 1
 	char *info = "Date/Time in CheatCodes.c";
-	DECOMP_DecalFont_DrawLine(info, WIDE_PICK(5, 100 - 40), 197, FONT_SMALL, ORANGE);
-	DECOMP_DecalFont_DrawLine(__DATE__, WIDE_PICK(5, 100 - 40), 206, FONT_SMALL, ORANGE);
-	DECOMP_DecalFont_DrawLine(__TIME__, WIDE_PICK(170, 228 - 40), 206, FONT_SMALL, ORANGE);
-	DECOMP_DecalFont_DrawLine("75%", WIDE_PICK(285, 315 - 40), 206, FONT_SMALL, ORANGE);
+	DECOMP_DecalFont_DrawLine(info, 5, 197, FONT_SMALL, ORANGE);
+	DECOMP_DecalFont_DrawLine(__DATE__, 5, 206, FONT_SMALL, ORANGE);
+	DECOMP_DecalFont_DrawLine(__TIME__, 170, 206, FONT_SMALL, ORANGE);
+	DECOMP_DecalFont_DrawLine("75%", 285, 206, FONT_SMALL, ORANGE);
 #endif
 
 	gpad = &sdata->gGamepads->gamepad[0];
@@ -334,13 +334,6 @@ void DECOMP_MM_ParseCheatCodes()
 		// apply cheat
 		*cheat->writeAddr |= cheat->addBits;
 
-#ifdef USE_OXIDE
-		// if scrapbook unlocked, then unlock Oxide,
-		// flag 0x1000 must match the 1<<0 in the icon array,
-		// this bit was used in Aug5 to unlock SlideCol, unused
-		if ((sdata->gameProgress.unlocks[1] & 0x10) != 0)
-			sdata->gameProgress.unlocks[0] |= 1;
-#endif
 
 		// do NOT quit loop,
 		// pinstripe and max engine overlap in cheat,

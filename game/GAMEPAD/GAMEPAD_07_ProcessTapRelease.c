@@ -16,15 +16,10 @@ void DECOMP_GAMEPAD_ProcessTapRelease(struct GamepadSystem *gGamepads)
 	struct GamepadBuffer *pad;
 	struct ControllerPacket *ptrControllerPacket;
 
-#ifdef USE_4PADTEST
-	ptrControllerPacket = gGamepads->gamepad[0].ptrControllerPacket;
-#endif
 
 	for (pad = &gGamepads->gamepad[0]; pad < &gGamepads->gamepad[numConnected]; pad++)
 	{
-#ifndef USE_4PADTEST
 		ptrControllerPacket = pad->ptrControllerPacket;
-#endif
 
 		// if pointer is invalid
 		if (ptrControllerPacket == NULL)

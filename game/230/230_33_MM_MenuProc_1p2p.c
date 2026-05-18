@@ -31,18 +31,6 @@ void DECOMP_MM_MenuProc_1p2p(struct RectMenu *menu)
 			// go to difficulty box
 			menu->ptrNextBox_InHierarchy = &D230.menuDifficulty;
 
-#ifdef USE_HARDER
-			// replace unused strings for
-			// "CHANGE CART" and "SAVE TIME",
-			// these new strings will be stored in 230 overlay
-			sdata->lngStrings[7] = "SUPER HARD";
-			sdata->lngStrings[8] = "ULTRA HARD";
-
-			// override to harder menu
-			extern struct RectMenu menuHarder;
-			menu->ptrNextBox_InHierarchy = &menuHarder;
-#endif
-
 			menu->state |= 0x14;
 			return;
 		}

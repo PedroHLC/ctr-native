@@ -116,7 +116,7 @@ short DECOMP_SubmitName_DrawMenu(u_short string)
 			DECOMP_DecalFont_DrawLine((char *)&keyboardString,
 
 			                          // j*22 + 116,
-			                          j * WIDE_PICK(22, 17) + WIDE_PICK(116, 148),
+			                          j * 22 + 116,
 
 			                          i * 18 + 88, FONT_BIG, strColorBlink);
 
@@ -132,7 +132,7 @@ short DECOMP_SubmitName_DrawMenu(u_short string)
 
 	                          // original name max len = 8,
 	                          // 192 = 256 - iconW(16) * halfMaxLen(4)
-	                          WIDE_PICK(192, 208),
+	                          192,
 
 	                          68, FONT_BIG, WHITE);
 
@@ -140,7 +140,7 @@ short DECOMP_SubmitName_DrawMenu(u_short string)
 	{
 		currNameWidth = DECOMP_DecalFont_GetLineWidth(gGT->currNameEntered, FONT_BIG);
 
-		DECOMP_DecalFont_DrawLine(sdata->str_underscore, currNameWidth + WIDE_PICK(192, 208),
+		DECOMP_DecalFont_DrawLine(sdata->str_underscore, currNameWidth + 192,
 
 		                          68, FONT_BIG, ORANGE);
 	}
@@ -154,7 +154,7 @@ short DECOMP_SubmitName_DrawMenu(u_short string)
 	DECOMP_DecalFont_DrawLine(sdata->lngStrings[stringCopy],
 
 	                          // 472 is (r.x + r.w - 8)
-	                          WIDE_PICK(472, 416),
+	                          472,
 
 	                          150, FONT_BIG, (JUSTIFY_RIGHT | strColorBlink));
 
@@ -166,7 +166,7 @@ short DECOMP_SubmitName_DrawMenu(u_short string)
 	DECOMP_DecalFont_DrawLine(sdata->lngStrings[321],
 
 	                          // 40 is (r.x + 8)
-	                          WIDE_PICK(40, 96),
+	                          40,
 
 	                          150, 1, strColorBlink);
 
@@ -178,8 +178,8 @@ short DECOMP_SubmitName_DrawMenu(u_short string)
 	// in 16x9,
 	// subtract 1/8 from r.x
 	// subtract 1/4 from r.w
-	r.x = WIDE_PICK(32, 88);
-	r.w = WIDE_34(448);
+	r.x = 32;
+	r.w = 448;
 
 	r.y = 62;
 	r.h = 2;

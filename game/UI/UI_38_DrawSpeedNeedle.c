@@ -26,7 +26,7 @@ void DECOMP_UI_DrawSpeedNeedle(short posX, short posY, struct Driver *driver)
 	int angle2 = angle1 + ANG(90);
 
 	int cos[2] = {DECOMP_MATH_Cos(angle1), DECOMP_MATH_Cos(angle2)};
-	int sin[2] = {WIDE_34(DECOMP_MATH_Sin(angle1)), WIDE_34(DECOMP_MATH_Sin(angle2))};
+	int sin[2] = {DECOMP_MATH_Sin(angle1), DECOMP_MATH_Sin(angle2)};
 
 	PolyG3 *p;
 	GetPrimMem(p);

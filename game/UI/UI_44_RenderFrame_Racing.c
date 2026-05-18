@@ -747,14 +747,7 @@ void DECOMP_UI_RenderFrame_Racing()
 		}
 	}
 
-	if ((levPtrMap != 0) && ((gameMode1 & BATTLE_MODE) == 0)
-
-// if loaded battle map in arcade,
-// this can happen when playing with debug menus
-#ifdef USE_PROFILER
-	    && (gGT->ptrIcons[3] != 0)
-#endif
-	)
+	if ((levPtrMap != 0) && ((gameMode1 & BATTLE_MODE) == 0))
 	{
 		if (((numPlyr == 1)
 

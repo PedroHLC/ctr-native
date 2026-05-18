@@ -132,12 +132,12 @@ void DECOMP_RB_ShieldDark_ThTick_Grow(struct Thread *th)
 		scaleY = ((int *)0x800b2cf4)[shield->animFrame * 2 + 1];
 
 		// set scale
-		shieldInst->scale[0] = WIDE_34(scaleXZ);
+		shieldInst->scale[0] = scaleXZ;
 		shieldInst->scale[1] = scaleY;
 		shieldInst->scale[2] = scaleXZ;
 
 		// set scale
-		colorInst->scale[0] = WIDE_34(scaleXZ);
+		colorInst->scale[0] = scaleXZ;
 		colorInst->scale[1] = scaleY;
 		colorInst->scale[2] = scaleXZ;
 
@@ -154,19 +154,19 @@ void DECOMP_RB_ShieldDark_ThTick_Grow(struct Thread *th)
 		scaleY = ((short *)0x800b2d40)[timerIndex * 2 + 1];
 
 		// set scale
-		shieldInst->scale[0] = WIDE_34(scaleXZ);
+		shieldInst->scale[0] = scaleXZ;
 		shieldInst->scale[1] = scaleY;
 		shieldInst->scale[2] = scaleXZ;
 
 		// set scale
-		colorInst->scale[0] = WIDE_34(scaleXZ);
+		colorInst->scale[0] = scaleXZ;
 		colorInst->scale[1] = scaleY;
 		colorInst->scale[2] = scaleXZ;
 
 		// set scale
 		highlightInst->scale[0] = scaleXZ;
 		highlightInst->scale[1] = scaleY;
-		highlightInst->scale[2] = WIDE_34(scaleXZ);
+		highlightInst->scale[2] = scaleXZ;
 	}
 
 	// if this is not a blue shield,

@@ -31,10 +31,6 @@ void DECOMP_UI_WeaponBG_DrawShine(struct Icon *icon, short posX, short posY, str
 	param_8 = param_8 >> 0xc;
 	sVar11 = sVar2 - param_8;
 
-#ifdef USE_16BY9
-	int len = (sVar3 * 250) / 1000;
-#endif
-
 	// loop 4 times
 	for (i = 0; i < 4; i++)
 	{
@@ -107,22 +103,6 @@ void DECOMP_UI_WeaponBG_DrawShine(struct Icon *icon, short posX, short posY, str
 
 			break;
 		}
-
-#ifdef USE_16BY9
-		if (i & 1)
-		{
-			// x0 and x2 is the right side
-			p->x0 -= len;
-			p->x2 -= len;
-		}
-
-		else
-		{
-			// x0 and x2 is the left side
-			p->x0 += len;
-			p->x2 += len;
-		}
-#endif
 
 		// color RGB
 		*(u_int *)&p->r0 = wumpaShine[2];

@@ -26,9 +26,6 @@ int DECOMP_RECTMENU_ProcessInput(struct RectMenu *m)
 	}
 
 	if (
-#ifdef USE_PROFILER
-	    ((sdata->gGT->gameMode1 & DEBUG_MENU) == 0) &&
-#endif
 
 	    // if not drawing only title bar,
 	    // therefore this is the bottom of hierarchy

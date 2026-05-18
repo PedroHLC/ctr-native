@@ -10,10 +10,8 @@ void DECOMP_LOAD_AppendQueue_ex(/*int bigfile,*/ int flags, int fileIndex, void 
 {
 	struct LoadQueueSlot *lqs;
 
-#ifndef USE_BIGQUEUE
 	if (sdata->queueLength >= 8)
 		return;
-#endif
 
 	lqs = &sdata->queueSlots[sdata->queueLength];
 	lqs->flags = flags;

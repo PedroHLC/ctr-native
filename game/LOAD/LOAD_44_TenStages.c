@@ -140,17 +140,6 @@ int DECOMP_LOAD_TenStages(struct GameTracker *gGT, int loadingStage, struct BigH
 			gGT->numPlyrCurrGame = gGT->numPlyrNextGame;
 		}
 
-#ifdef USE_HIGHMP
-		else if (levelID <= GEM_STONE_VALLEY)
-		{
-			if (gGT->podiumRewardID == 0) // 0
-			{
-				// get CurrGame from main menu's NextGame
-				gGT->numPlyrCurrGame = gGT->numPlyrNextGame;
-			}
-		}
-#endif
-
 		else if (levelID == MAIN_MENU_LEVEL)
 		{
 			// get NextGame from the game you exited
@@ -235,10 +224,6 @@ int DECOMP_LOAD_TenStages(struct GameTracker *gGT, int loadingStage, struct BigH
 		else
 			ovrRegion1 = 4;
 
-#ifdef USE_HIGHMP
-		ovrRegion1 = 4;
-#endif
-
 		DECOMP_LOAD_OvrEndRace(ovrRegion1);
 		break;
 	}
@@ -253,11 +238,7 @@ int DECOMP_LOAD_TenStages(struct GameTracker *gGT, int loadingStage, struct BigH
 		if (levelID == ADVENTURE_GARAGE)
 			gGT->overlayIndex_LOD = 0xFF;
 
-#ifdef USE_HIGHMP
-		DECOMP_LOAD_OvrLOD(1);
-#else
 		DECOMP_LOAD_OvrLOD(gGT->numPlyrCurrGame);
-#endif
 		break;
 	}
 	case 3: {
@@ -303,41 +284,11 @@ int DECOMP_LOAD_TenStages(struct GameTracker *gGT, int loadingStage, struct BigH
 			D230.menuMainMenu.state = 0x403;
 #endif
 
-#ifdef USE_OXIDE
-			// if scrapbook unlocked, then unlock Oxide,
-			// flag 0x1000 must match the 1<<0 in the icon array,
-			// this bit was used in Aug5 to unlock SlideCol, unused
-			if ((sdata->gameProgress.unlocks[1] & 0x10) != 0)
-				sdata->gameProgress.unlocks[0] |= 1;
-#endif
-
 			if (levelID == ADVENTURE_GARAGE)
 				sdata->mainMenuState = 4;
 
 			mainMenuInit[sdata->mainMenuState]();
 		}
-
-#ifdef USE_PRELOAD
-		// TODO: Duplicate DriverMPK just for setting DriverIDs
-		DECOMP_LOAD_Robots1P(data.characterIDs[0]);
-
-		// only once on-boot
-		if (sdata->ptrMPK != 0)
-			break;
-
-		int *arr = 0x8000a000;
-
-		int i;
-		for (i = 0; i < 16; i++)
-		{
-			// high lod CTR model
-			DECOMP_LOAD_AppendQueue(0, LT_GETADDR, BI_RACERMODELHI + i, &arr[i], cbDRAM);
-		}
-
-		// Time Trial MPK
-		DECOMP_LOAD_AppendQueue(0, LT_GETADDR, BI_TIMETRIALPACK + 0xF, &sdata->ptrMPK, cbDRAM);
-		break;
-#endif
 
 		// Needed, or else Post-Boss Outro
 		// will break the character animations
@@ -354,15 +305,6 @@ int DECOMP_LOAD_TenStages(struct GameTracker *gGT, int loadingStage, struct BigH
 		break;
 	}
 	case 5: {
-#ifdef USE_PRELOAD
-		// first-boot
-		if (sdata->PLYROBJECTLIST == 0)
-		{
-			// Never de-allocate lower than here
-			sdata->bookmarkID = DECOMP_MEMPACK_PushState();
-		}
-#endif
-
 		sdata->PLYROBJECTLIST = (int **)((unsigned int)sdata->ptrMPK + 4);
 		if (sdata->ptrMPK == 0)
 			sdata->PLYROBJECTLIST = 0;
@@ -488,17 +430,6 @@ int DECOMP_LOAD_TenStages(struct GameTracker *gGT, int loadingStage, struct BigH
 			DECOMP_MEMPACK_SwapPacks(gGT->activeMempackIndex);
 		}
 
-#ifdef USE_LEVELDEV
-		if (gGT->levelID == CUSTOM_LEVEL_ID)
-		{
-			HotReloadVRAM();
-
-			// do NOT load bigfile level file,
-			// instead load the hot-reload level
-			break;
-		}
-#endif
-
 		// base index of the group
 		uVar16 = DECOMP_LOAD_GetBigfileIndex(gGT->levelID, sdata->levelLOD);
 
@@ -519,11 +450,6 @@ int DECOMP_LOAD_TenStages(struct GameTracker *gGT, int loadingStage, struct BigH
 	case 7: {
 		// get level pointer
 		struct Level *lev = sdata->ptrLevelFile;
-
-#ifdef USE_LEVELDEV
-		if (gGT->levelID == CUSTOM_LEVEL_ID)
-			lev = (struct Level *)CUSTOM_LEV_ADDR;
-#endif
 
 		gGT->level1 = lev;
 		gGT->visMem1 = lev->visMem;

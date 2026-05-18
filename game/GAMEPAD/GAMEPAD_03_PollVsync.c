@@ -21,16 +21,6 @@ void DECOMP_GAMEPAD_PollVsync(struct GamepadSystem *gGamepads)
 		maxPadsPerPort = 4;
 	}
 
-#ifdef USE_REAL60PS1
-	numPorts = 1;
-	maxPadsPerPort = 1;
-#endif
-
-#ifdef USE_4PADTEST
-	// use 1 controller for all 4
-	numPorts = 1;
-	maxPadsPerPort = 4;
-#endif
 
 	pad = &gGamepads->gamepad[0];
 
@@ -51,9 +41,6 @@ void DECOMP_GAMEPAD_PollVsync(struct GamepadSystem *gGamepads)
 			                      // controller unplugged
 			                      (gGamepads->slotBuffer[port].plugged != PLUGGED));
 
-#ifdef USE_4PADTEST
-			unpluggedPort = 0;
-#endif
 
 			if (unpluggedPort)
 			{
@@ -70,11 +57,6 @@ void DECOMP_GAMEPAD_PollVsync(struct GamepadSystem *gGamepads)
 				// 1 - PadStateFindPad
 				// and many more...
 				uVar2 = PadGetState(uVar4);
-
-// use 1 controller for all 4
-#ifdef USE_4PADTEST
-				uVar2 = PadGetState(0);
-#endif
 
 				DECOMP_GAMEPAD_ProcessState(pad, uVar2, uVar4);
 			}

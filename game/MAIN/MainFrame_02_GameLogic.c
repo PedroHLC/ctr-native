@@ -171,16 +171,6 @@ void DECOMP_MainFrame_GameLogic(struct GameTracker *gGT, struct GamepadSystem *g
 		for (iVar4 = 0; iVar4 < NUM_BUCKETS; iVar4++)
 		{
 			if (
-// This code was in OG, but not needed by retail game
-#ifdef USE_PROFILER
-			    (
-			        // if threads are not paused
-			        ((gGT->gameMode1 & DEBUG_MENU) == 0) ||
-
-			        // if bucket can not be paused
-			        ((gGT->threadBuckets[iVar4].boolCantPause & 1U) != 0)) &&
-#endif
-
 			    // if threads exist
 			    (gGT->threadBuckets[iVar4].thread != 0))
 			{
@@ -190,10 +180,6 @@ void DECOMP_MainFrame_GameLogic(struct GameTracker *gGT, struct GamepadSystem *g
 					{
 						DECOMP_VehPickupItem_ShootOnCirclePress((struct Driver *)psVar12->object);
 					}
-
-#ifdef USE_HIGHMP
-					int backupPlyrCount;
-#endif
 
 					// run all driver funcPtrs,
 					// all drivers must run the same stage (1-13)
@@ -216,22 +202,7 @@ void DECOMP_MainFrame_GameLogic(struct GameTracker *gGT, struct GamepadSystem *g
 								pcVar5(psVar12, psVar9);
 							}
 						}
-
-// rig collisions to high-poly,
-// wait until Stage 2 finishes, cause PhysLinear
-// uses gGT->numPlyrCurrGame for VehPhysGeneral_SetHeldItem
-#ifdef USE_HIGHMP
-						if (iVar11 == 2)
-						{
-							backupPlyrCount = gGT->numPlyrCurrGame;
-							gGT->numPlyrCurrGame = 1;
-						}
-#endif
 					}
-
-#ifdef USE_HIGHMP
-					gGT->numPlyrCurrGame = backupPlyrCount;
-#endif
 				}
 
 

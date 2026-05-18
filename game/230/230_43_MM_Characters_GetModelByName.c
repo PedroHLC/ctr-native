@@ -43,11 +43,6 @@ struct Model *MM_Characters_GetModelByID(int id)
 	if (level1 == NULL)
 		return NULL;
 
-#ifdef USE_OXIDE
-	if (id == 0xf)
-		return data.driverModelExtras[0];
-#endif
-
 	// Only use Preload in the main menu
 	// if an entirely new roster of characters
 	// is ready. Otherwise it breaks animations

@@ -116,13 +116,6 @@ void DECOMP_MM_Characters_MenuProc(struct RectMenu *unused)
 				return;
 			}
 
-#if defined(USE_LEVELDEV) || defined(USE_LEVELDISC)
-			gGT->currLEV = CUSTOM_LEVEL_ID;
-			MainRaceTrack_RequestLoad(CUSTOM_LEVEL_ID);
-			sdata->ptrActiveMenu = 0;
-			return;
-#endif
-
 			// if going to track selection
 			sdata->ptrDesiredMenu = &D230.menuTrackSelect;
 			DECOMP_MM_TrackSelect_Init();
@@ -207,9 +200,6 @@ dontDrawSelectCharacter:
 		puVar26 = (u_short *)&D230.csm_Active[globalIconPerPlayerCopy];
 
 		if (
-#ifdef USE_PROFILER
-		    ((gGT->gameMode1 & DEBUG_MENU) == 0) &&
-#endif
 
 		    (D230.isMenuTransitioning == 1) &&
 		    (
@@ -431,14 +421,6 @@ dontDrawSelectCharacter:
 		// transition of each icon
 		iVar24 = (int)&D230.ptrTransitionMeta[globalIconPerPlayerCopy];
 
-#ifdef USE_OXIDE
-		if (globalIconPerPlayerCopy == NITROS_OXIDE)
-		{
-			// use same transition as Fake Crash
-			iVar24 = &D230.ptrTransitionMeta[FAKE_CRASH];
-		}
-#endif
-
 		// if player has not selected a character
 		if (((sdata->characterSelectFlags >> i) & 1U) == 0)
 		{
@@ -466,11 +448,7 @@ dontDrawSelectCharacter:
 
 	csm_Active = D230.csm_Active;
 
-#ifndef USE_OXIDE
 #define NUM_ICONS 0xF
-#else
-#define NUM_ICONS 0x10
-#endif
 
 	// loop through character icons
 	for (i = 0; i < NUM_ICONS; i++)
@@ -500,14 +478,6 @@ dontDrawSelectCharacter:
 			}
 
 			iVar8 = (int)&D230.ptrTransitionMeta[i];
-
-#ifdef USE_OXIDE
-			if (i == NITROS_OXIDE)
-			{
-				// use same transition as Fake Crash
-				iVar8 = &D230.ptrTransitionMeta[FAKE_CRASH];
-			}
-#endif
 
 			DECOMP_RECTMENU_DrawPolyGT4(gGT->ptrIcons[data.MetaDataCharacters[csm_Active->characterID].iconID],
 			                            ((struct TransitionMeta *)iVar8)->currX + csm_Active->posX + 6,
@@ -548,14 +518,6 @@ dontDrawSelectCharacter:
 			colorRGBA[2] = (u_char)((int)((u_int)colorRGBA[2] << 2) / 5);
 
 			iVar8 = (int)&D230.ptrTransitionMeta[playerIcon];
-
-#ifdef USE_OXIDE
-			if (playerIcon == NITROS_OXIDE)
-			{
-				// use same transition as Fake Crash
-				iVar8 = &D230.ptrTransitionMeta[FAKE_CRASH];
-			}
-#endif
 
 			r->x = ((struct TransitionMeta *)iVar8)->currX + csm_Active->posX + 3;
 			r->y = ((struct TransitionMeta *)iVar8)->currY + csm_Active->posY + 2;
@@ -616,14 +578,6 @@ dontDrawSelectCharacter:
 		    ((sdata->gameProgress.unlocks[iVar8 >> 5] >> (iVar8 & 0x1fU) & 1) != 0))
 		{
 			iVar8 = (int)&D230.ptrTransitionMeta[i];
-
-#ifdef USE_OXIDE
-			if (i == NITROS_OXIDE)
-			{
-				// use same transition as Fake Crash
-				iVar8 = &D230.ptrTransitionMeta[FAKE_CRASH];
-			}
-#endif
 
 			r->x = ((struct TransitionMeta *)iVar8)->currX + csm_Active[i].posX;
 			r->y = ((struct TransitionMeta *)iVar8)->currY + csm_Active[i].posY;

@@ -541,7 +541,7 @@ void DECOMP_MM_Battle_MenuProc(struct RectMenu *unused)
 	DECOMP_DecalFont_DrawLine(sdata->lngStrings[0x90], tmbattle[9].currX + 0x100, tmbattle[9].currY + 10, 1, 0xffff8000);
 
 	// "TYPE:"
-	DECOMP_DecalFont_DrawLine(sdata->lngStrings[0x91], tmbattle[1].currX + 0x8c + WIDE_PICK(0, 25), tmbattle[1].currY + 0x24, 1, 0x4000);
+	DECOMP_DecalFont_DrawLine(sdata->lngStrings[0x91], tmbattle[1].currX + 0x8c + 0, tmbattle[1].currY + 0x24, 1, 0x4000);
 
 	D230.menuBattleType.state &= ~(0x100 | SHOW_ONLY_HIGHLIT_ROW);
 
@@ -556,14 +556,14 @@ void DECOMP_MM_Battle_MenuProc(struct RectMenu *unused)
 		D230.menuBattleType.state |= 0x100;
 	}
 
-	DECOMP_RECTMENU_DrawSelf(&D230.menuBattleType, tmbattle[0].currX + 0x9c + WIDE_PICK(0, 25), tmbattle[0].currY + 0x24, WIDE_34(0x134));
+	DECOMP_RECTMENU_DrawSelf(&D230.menuBattleType, tmbattle[0].currX + 0x9c + 0, tmbattle[0].currY + 0x24, 0x134);
 
 	local_38 = 0xd;
 	DECOMP_RECTMENU_GetHeight(&D230.menuBattleType, &local_38, 0);
 	sVar6 = local_38 + 0x20;
 
 	// "LENGTH:"
-	DECOMP_DecalFont_DrawLine(sdata->lngStrings[0x95], tmbattle[3].currX + 0x8c + WIDE_PICK(0, 25), tmbattle[3].currY + sVar6 + 4, 1, 0x4000);
+	DECOMP_DecalFont_DrawLine(sdata->lngStrings[0x95], tmbattle[3].currX + 0x8c + 0, tmbattle[3].currY + sVar6 + 4, 1, 0x4000);
 
 	if (D230.menuBattleType.rowSelected == 1)
 	{
@@ -587,8 +587,7 @@ void DECOMP_MM_Battle_MenuProc(struct RectMenu *unused)
 					D230.menuBattleLengthLifeTime.state |= 0x100;
 				}
 
-				DECOMP_RECTMENU_DrawSelf(&D230.menuBattleLengthLifeTime, tmbattle[2].currX + 0x9c + WIDE_PICK(0, 25), tmbattle[2].currY + sVar6 + 4,
-				                         WIDE_34(0x8e));
+				DECOMP_RECTMENU_DrawSelf(&D230.menuBattleLengthLifeTime, tmbattle[2].currX + 0x9c + 0, tmbattle[2].currY + sVar6 + 4, 0x8e);
 
 				D230.menuBattleLengthLifeLife.state &= ~(0x100 | SHOW_ONLY_HIGHLIT_ROW);
 
@@ -601,8 +600,7 @@ void DECOMP_MM_Battle_MenuProc(struct RectMenu *unused)
 					D230.menuBattleLengthLifeLife.state |= 0x100;
 				}
 
-				DECOMP_RECTMENU_DrawSelf(&D230.menuBattleLengthLifeLife, tmbattle[2].currX + 0x142 - WIDE_PICK(0, 16), tmbattle[2].currY + sVar6 + 4,
-				                         WIDE_34(0x8e));
+				DECOMP_RECTMENU_DrawSelf(&D230.menuBattleLengthLifeLife, tmbattle[2].currX + 0x142 - 0, tmbattle[2].currY + sVar6 + 4, 0x8e);
 
 				local_38 = 0xd;
 				DECOMP_RECTMENU_GetHeight(&D230.menuBattleLengthLifeTime, &local_38, 0);
@@ -632,7 +630,7 @@ void DECOMP_MM_Battle_MenuProc(struct RectMenu *unused)
 		box->state |= 0x100;
 	}
 
-	DECOMP_RECTMENU_DrawSelf(box, tmbattle[2].currX + 0x9c + WIDE_PICK(0, 25), tmbattle[2].currY + sVar6 + 4, WIDE_34(0x134));
+	DECOMP_RECTMENU_DrawSelf(box, tmbattle[2].currX + 0x9c + 0, tmbattle[2].currY + sVar6 + 4, 0x134);
 
 	local_38 = 0xd;
 	DECOMP_RECTMENU_GetHeight(box, &local_38, 0);
@@ -643,7 +641,7 @@ LAB_800b25f0:
 	iVar8 = 0x9f;
 
 	// "TEAMS:"
-	DECOMP_DecalFont_DrawLine(sdata->lngStrings[0x98], tmbattle[5].currX + 0x8c + WIDE_PICK(0, 25), tmbattle[5].currY + sVar20 + 10, 1, 0x4000);
+	DECOMP_DecalFont_DrawLine(sdata->lngStrings[0x98], tmbattle[5].currX + 0x8c + 0, tmbattle[5].currY + sVar20 + 10, 1, 0x4000);
 
 	i = 4;
 
@@ -660,15 +658,15 @@ LAB_800b25f0:
 			if (iVar9 == iVar13)
 			{
 				local_58b[iVar9]++;
-				local_60b[iVar9] += WIDE_34(0x2a);
-				iVar16 = iVar16 + WIDE_34(0x2a);
+				local_60b[iVar9] += 0x2a;
+				iVar16 = iVar16 + 0x2a;
 			}
 		}
 
 		i = iVar16 + 4;
 	}
 
-	uVar10 = WIDE_34(0x12e) - iVar16;
+	uVar10 = 0x12e - iVar16;
 	i = (int)(uVar10);
 	uVar12 = i + 3;
 	if ((int)uVar12 < 0)
@@ -692,24 +690,24 @@ LAB_800b25f0:
 	for (i = 0; i < 4; i++)
 	{
 		uVar4 = local_60b[i];
-		iVar13 = iVar8 + (uVar4 >> 0x1) + (int)local_58b[i] * WIDE_34(-0x15);
+		iVar13 = iVar8 + (uVar4 >> 0x1) + (int)local_58b[i] * -0x15;
 
 		for (iVar16 = 0; iVar16 < numPlyr; iVar16++)
 		{
 			if (gGT->battleSetup.teamOfEachPlayer[iVar16] == i)
 			{
 				sVar6 = (short)iVar13;
-				iVar13 = iVar13 + WIDE_34(0x2a);
+				iVar13 = iVar13 + 0x2a;
 
 				DECOMP_MM_Battle_DrawIcon_Character(gGT->ptrIcons[data.MetaDataCharacters[data.characterIDs[iVar16]].iconID],
-				                                    (int)tmbattle[4].currX + (int)sVar6 + WIDE_PICK(0, 25), (int)tmbattle[4].currY + (int)sVar20 + 6,
+				                                    (int)tmbattle[4].currX + (int)sVar6 + 0, (int)tmbattle[4].currY + (int)sVar20 + 6,
 
 				                                    &gGT->backBuffer->primMem, gGT->pushBuffer_UI.ptrOT, 1, 0x1000);
 			}
 		}
 
 		local_48.h = 0x1a;
-		local_48.x = tmbattle[4].currX + (short)iVar8 + WIDE_PICK(0, 25);
+		local_48.x = tmbattle[4].currX + (short)iVar8 + 0;
 		local_48.y = tmbattle[4].currY + sVar20 + 5;
 		iVar8 = iVar8 + (u_int)uVar4;
 
@@ -722,24 +720,24 @@ LAB_800b25f0:
 
 	if (sdata->battleSetupRowHighlighted == 2)
 	{
-		local_50.w = WIDE_34(0x134);
+		local_50.w = 0x134;
 		local_50.h = 0x1e;
-		local_50.x = tmbattle[4].currX + 0x9c + WIDE_PICK(0, 25);
+		local_50.x = tmbattle[4].currX + 0x9c + 0;
 		local_50.y = tmbattle[4].currY + sVar20 + 3;
 
 		DECOMP_CTR_Box_DrawClearBox(&local_50, &sdata->menuRowHighlight_Normal, TRANS_50_DECAL, (u_long *)ot);
 	}
 
-	local_40.w = WIDE_34(0x140);
+	local_40.w = 0x140;
 	local_40.h = 0x24;
-	local_40.x = tmbattle[4].currX + 0x96 + WIDE_PICK(0, 25);
+	local_40.x = tmbattle[4].currX + 0x96 + 0;
 	local_40.y = tmbattle[4].currY + sVar20;
 
 	// Draw 2D Menu rectangle background
 	DECOMP_RECTMENU_DrawInnerRect(&local_40, 0, ot);
 
 	// "WEAPONS:"
-	DECOMP_DecalFont_DrawLine(sdata->lngStrings[0x99], tmbattle[7].currX + 0x8c + WIDE_PICK(0, 25), tmbattle[7].currY + sVar20 + 0x44, 1, 0x4000);
+	DECOMP_DecalFont_DrawLine(sdata->lngStrings[0x99], tmbattle[7].currX + 0x8c + 0, tmbattle[7].currY + sVar20 + 0x44, 1, 0x4000);
 
 	// make flashing color for error message
 
@@ -796,7 +794,7 @@ LAB_800b25f0:
 		{
 			D230.menuBattleStartGame.state |= 0x100;
 		}
-		DECOMP_RECTMENU_DrawSelf(&D230.menuBattleStartGame, tmbattle[8].currX + 0x9c + WIDE_PICK(0, 25), tmbattle[8].currY + sVar20 + 0x78, WIDE_34(0x134));
+		DECOMP_RECTMENU_DrawSelf(&D230.menuBattleStartGame, tmbattle[8].currX + 0x9c + 0, tmbattle[8].currY + sVar20 + 0x78, 0x134);
 
 		local_38 = 0xd;
 		DECOMP_RECTMENU_GetHeight(&D230.menuBattleStartGame, &local_38, 0);
@@ -815,9 +813,9 @@ LAB_800b25f0:
 		DECOMP_DecalFont_DrawLine(sdata->lngStrings[i], 0x100, sVar20 + 0x7a, 1, (int)sVar6);
 	}
 	i = 0;
-	local_40.w = WIDE_34(0x140);
+	local_40.w = 0x140;
 	local_40.h = 0x44;
-	local_40.x = tmbattle[6].currX + 0x96 + WIDE_PICK(0, 25);
+	local_40.x = tmbattle[6].currX + 0x96 + 0;
 	local_40.y = tmbattle[6].currY + sVar20 + 0x2a;
 
 	// Loop through all 11 weapon icons
@@ -838,7 +836,7 @@ LAB_800b25f0:
 
 		// iVar4 % 6
 		// Go to 2nd row after 6th icon
-		iVar13 = (u_int)local_40.x + 6 + (iVar8 % 6) * WIDE_34(0x34) + j * WIDE_34(0x1a);
+		iVar13 = (u_int)local_40.x + 6 + (iVar8 % 6) * 0x34 + j * 0x1a;
 
 		j = (u_int)local_40.y + 2 + j * 0x20;
 
@@ -855,13 +853,13 @@ LAB_800b25f0:
 
 	if ((unsigned int)sdata->battleSetupRowHighlighted - 3 < 2)
 	{
-		sVar6 = local_40.x + sdata->battleSetupWeaponHighlighted * WIDE_34(0x34);
+		sVar6 = local_40.x + sdata->battleSetupWeaponHighlighted * 0x34;
 		local_60.x = sVar6 + 4;
 		if (sdata->battleSetupRowHighlighted == 4)
 		{
-			local_60.x = sVar6 + WIDE_34(0x1e);
+			local_60.x = sVar6 + 0x1e;
 		}
-		local_60.w = WIDE_34(0x34);
+		local_60.w = 0x34;
 		local_60.h = 0x20;
 		local_60.y = local_40.y + (sdata->battleSetupRowHighlighted - 3) * 0x20 + 2;
 

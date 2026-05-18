@@ -25,11 +25,7 @@ void DECOMP_MM_Characters_RestoreIDs(void)
 
 	DECOMP_MM_Characters_SetMenuLayout();
 
-#ifndef USE_OXIDE
 #define NUM_ICONS 0xF
-#else
-#define NUM_ICONS 0x10
-#endif
 
 	for (i = 0; i < NUM_ICONS; i++)
 	{

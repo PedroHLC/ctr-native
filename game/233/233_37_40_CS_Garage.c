@@ -33,35 +33,6 @@ void DECOMP_CS_Garage_ZoomOut(char zoomState)
 	sdata->gGT->gameMode2 &= ~(GARAGE_OSK);
 }
 
-#ifdef USE_OXIDE
-char OXIDE_GarageUnlockFlags[] = {
-    // [x] = y
-    // [characterID-8] = unlockFlag (unlocks[0] & 1<<self)
-
-    0x0A, 0x08, 0x07, 0x09, 0x05, 0x06, 0x0B, 0x0C,
-
-};
-
-int OXIDE_GarageGetNext(int curr, int dir)
-{
-	do
-	{
-		// go to next
-		curr += dir;
-		curr &= 0xf;
-
-		// repeat search if new character is locked
-	} while (
-	    // character has unlock condition
-	    (curr >= 8) &&
-
-	    (
-	        // locked
-	        (sdata->gameProgress.unlocks[0] & (1 << OXIDE_GarageUnlockFlags[curr - 8])) == 0));
-
-	return curr;
-}
-#endif
 
 void DECOMP_CS_Garage_MenuProc(struct RectMenu *param_1)
 {
@@ -79,36 +50,6 @@ void DECOMP_CS_Garage_MenuProc(struct RectMenu *param_1)
 	int nameIndex = MDC->name_LNG_long;
 	RECT r;
 
-#ifdef USE_OXIDE
-	if (
-	    // if Crash selected
-	    (currSelectIndex == 0) && (gGarage.numFramesCurr_GarageMove == 0) &&
-
-	    // if at least one character unlocked
-	    ((sdata->gameProgress.unlocks[0] & 0x1FE0) != 0))
-	{
-		// button
-		int buttonTap = sdata->AnyPlayerTap;
-
-		// left
-		if ((buttonTap & BTN_L1) == BTN_L1)
-			gGarage.unusedFrameCount = OXIDE_GarageGetNext(gGarage.unusedFrameCount, -1);
-
-		// right
-		else if ((buttonTap & BTN_R1) == BTN_R1)
-			gGarage.unusedFrameCount = OXIDE_GarageGetNext(gGarage.unusedFrameCount, 1);
-
-		MDC = &data.MetaDataCharacters[gGarage.unusedFrameCount];
-		nameIndex = MDC->name_LNG_long;
-
-		DECOMP_DecalFont_DrawLine("PRESS L1 OR R1 TO SWAP",
-		                          0x100,                    // midpoint
-		                          0xc8,                     // near bottom
-		                          FONT_SMALL,               // small text
-		                          (JUSTIFY_CENTER | ORANGE) // center
-		);
-	}
-#endif
 
 	// CameraDC, freecam mode
 	gGT->cameraDC[0].cameraMode = 3;
@@ -134,10 +75,6 @@ void DECOMP_CS_Garage_MenuProc(struct RectMenu *param_1)
 	{
 		barLen = &gGarage.barLen[i];
 		short stat = gGarage.barStat[MDC->engineID * 3 + i];
-
-#ifdef USE_16BY9
-		stat = WIDE_34(stat);
-#endif
 
 
 #define BAR_RATE 3
@@ -229,7 +166,7 @@ void DECOMP_CS_Garage_MenuProc(struct RectMenu *param_1)
 		// outline color black (shadows)
 		DECOMP_CTR_Box_DrawWireBox(&r, MakeColor(0, 0, 0), gGT->pushBuffer_UI.ptrOT);
 
-		int segmentLen = WIDE_PICK(13, 10);
+		int segmentLen = 13;
 		int segmentStart = 0;
 		int segmentEnd = segmentLen;
 
@@ -435,14 +372,6 @@ void DECOMP_CS_Garage_MenuProc(struct RectMenu *param_1)
 					data.characterIDs[0] = currSelectIndex;
 					sdata->advProgress.characterID = data.characterIDs[0];
 
-#ifdef USE_OXIDE
-					if (data.characterIDs[0] == 0)
-					{
-						data.characterIDs[0] = gGarage.unusedFrameCount;
-						sdata->advProgress.characterID = data.characterIDs[0];
-					}
-#endif
-
 					DECOMP_SubmitName_RestoreName(0);
 					DECOMP_OtherFX_Play(1, 1);
 				}
@@ -531,20 +460,6 @@ SKIP_CONTROLS:
 			data.characterIDs[0] = currSelectIndex;
 			sdata->advProgress.characterID = data.characterIDs[0];
 
-#ifdef USE_OXIDE
-			if (data.characterIDs[0] == 0)
-			{
-				data.characterIDs[0] = gGarage.unusedFrameCount;
-				sdata->advProgress.characterID = data.characterIDs[0];
-			}
-#endif
-
-			DECOMP_SubmitName_RestoreName(0);
-			DECOMP_OtherFX_Play(1, 1);
-		}
-
-		else
-		{
 			gGarage.delayOneSecond++;
 		}
 	}

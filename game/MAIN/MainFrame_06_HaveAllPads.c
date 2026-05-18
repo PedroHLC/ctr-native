@@ -2,8 +2,6 @@
 
 int DECOMP_MainFrame_HaveAllPads(short numPlyrNextGame)
 {
-#ifndef USE_4PADTEST
-
 	// if game is not loading
 	if (sdata->Loading.stage == -1)
 	{
@@ -21,8 +19,6 @@ int DECOMP_MainFrame_HaveAllPads(short numPlyrNextGame)
 			gb++;
 		}
 	}
-
-#endif
 
 	return 1;
 }

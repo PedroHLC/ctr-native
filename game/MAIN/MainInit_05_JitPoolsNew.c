@@ -106,24 +106,6 @@ void DECOMP_MainInit_JitPoolsNew(struct GameTracker *gGT)
 	// Optimization tech
 	if (numInstance == 128)
 	{
-#if defined(USE_LEVELDEV) || defined(USE_LEVELDISC)
-
-		// custom tracks have no level instances,
-		// no weapons, nothing on the track
-		numInstance = 32;
-
-		// Extend bit range of quadblockID,
-		// upper bits are never used, but still
-		// need AND for alignment with LW instruction
-		*(unsigned short *)0x800a0f18 = 0xFFFC;
-		*(unsigned short *)0x800a1e80 = 0xFFFC;
-		*(unsigned short *)0x800a36d8 = 0xFFFC;
-		*(unsigned short *)0x800a4fd0 = 0xFFFC;
-		*(unsigned short *)0x800a6f70 = 0xFFFC;
-		*(unsigned short *)0x800a8b90 = 0xFFFC;
-
-#else
-
 		if (gGT->numPlyrCurrGame == 1)
 		{
 			// Do NOT touch Crystal Challenge, AdvHub, Cutscene,
@@ -148,8 +130,6 @@ void DECOMP_MainInit_JitPoolsNew(struct GameTracker *gGT)
 				numInstance -= 16;
 			}
 		}
-
-#endif
 	}
 
 	// InstancePool

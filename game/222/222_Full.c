@@ -645,7 +645,7 @@ void DECOMP_AA_EndEvent_DisplayTime(short driverId, short param_2)
 
 	r.x = (posXY[0] - width) + -6;
 	r.y = (posXY[1] - r.h) + 0xd;
-	r.w = width + WIDE_34(0x94);
+	r.w = width + 0x94;
 	r.h += 6;
 
 	// Draw 2D Menu rectangle background

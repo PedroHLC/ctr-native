@@ -29,21 +29,11 @@ void DECOMP_PushBuffer_SetMatrixVP(struct PushBuffer *pb)
 	// originally used 556 bytes
 
 #ifdef REBUILD_PC
-	// Windows x86_64, use global scratchpad
 	MATRIX *matrixDST = (MATRIX *)&scratchpad[0x3d4];
-#else
-#ifdef USE_VR
-	// in DuckStation, use address usable by injection
-	MATRIX *matrixDST = 0x8000C000;
 #else
 	// ordinary PlayStation 1, use scratchpad
 	MATRIX *matrixDST = (MATRIX *)0x1f8003d4;
 #endif
-#endif
-
-// Dont write matrix for VR,
-// OculusTest.exe will inject the matrix manually
-#ifndef USE_VR
 
 #ifndef REBUILD_PC
 	*(short *)0x1f8003f4 = pb->rot[0];
@@ -55,19 +45,6 @@ void DECOMP_PushBuffer_SetMatrixVP(struct PushBuffer *pb)
 	*(short *)&scratchpad[0x3f6] = pb->rot[1];
 	*(short *)&scratchpad[0x3f8] = pb->rot[2];
 	ConvertRotToMatrix(matrixDST, (short *)&scratchpad[0x3f4]);
-#endif
-
-// ifdef USE_VR
-#else
-
-	// if inside VR, increment each frame,
-	// assuming pb->pos resets next frame,
-	// do not use this with freecam mods cause
-	// it will increment infinitely into the skybox
-	pb->pos[0] += matrixDST->t[0];
-	pb->pos[1] += matrixDST->t[1];
-	pb->pos[2] += matrixDST->t[2];
-
 #endif
 
 	short t[3];
@@ -191,11 +168,6 @@ void DECOMP_PushBuffer_SetMatrixVP(struct PushBuffer *pb)
 
 	// scale Y axis (3)
 	pb->matrix_ViewProj.m[1][2] = pb->matrix_ViewProj.m[1][2] * r360 / r600;
-
-#ifdef USE_16BY9
-	void ui16by9_ViewProj(struct PushBuffer * pb);
-	ui16by9_ViewProj(pb);
-#endif
 
 	// store camera matrix,
 	// otherwise oxide intro cutscene bugs out,

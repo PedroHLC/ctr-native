@@ -2715,10 +2715,10 @@ struct Data
 
             .font_charPixWidth =
                 {
-                    0,           // DEBUG (removed)
-                    WIDE_34(17), // BIG
-                    WIDE_34(13), // SMALL
-                    WIDE_34(14), // CREDITS
+                    0,  // DEBUG (removed)
+                    17, // BIG
+                    13, // SMALL
+                    14, // CREDITS
                 },
 
 #if BUILD >= UsaRetail
@@ -2733,10 +2733,10 @@ struct Data
 
             .font_puncPixWidth =
                 {
-                    0,           // DEBUG (removed)
-                    WIDE_34(11), // BIG
-                    WIDE_34(7),  // SMALL
-                    WIDE_34(11), // CREDITS
+                    0,  // DEBUG (removed)
+                    11, // BIG
+                    7,  // SMALL
+                    11, // CREDITS
                 },
 
             // starts at ascii 0x21 '!'
@@ -5273,36 +5273,36 @@ struct Data
             .speedometerBG_vertData =
                 {
                     {
-                        {.x = WIDE_34(-65), .y = 16},
-                        {.x = WIDE_34(-54), .y = 13},
-                        {.x = WIDE_34(-70), .y = 0},
-                        {.x = WIDE_34(-58), .y = 0},
-                        {.x = WIDE_34(-65), .y = -16},
-                        {.x = WIDE_34(-54), .y = -13},
-                        {.x = WIDE_34(-50), .y = -29},
-                        {.x = WIDE_34(-42), .y = -24},
-                        {.x = WIDE_34(-25), .y = -39},
-                        {.x = WIDE_34(-21), .y = -32},
-                        {.x = WIDE_34(0), .y = -42},
-                        {.x = WIDE_34(0), .y = -35},
-                        {.x = WIDE_34(25), .y = -39},
-                        {.x = WIDE_34(21), .y = -32},
+                        {.x = -65, .y = 16},
+                        {.x = -54, .y = 13},
+                        {.x = -70, .y = 0},
+                        {.x = -58, .y = 0},
+                        {.x = -65, .y = -16},
+                        {.x = -54, .y = -13},
+                        {.x = -50, .y = -29},
+                        {.x = -42, .y = -24},
+                        {.x = -25, .y = -39},
+                        {.x = -21, .y = -32},
+                        {.x = 0, .y = -42},
+                        {.x = 0, .y = -35},
+                        {.x = 25, .y = -39},
+                        {.x = 21, .y = -32},
                     },
                     {
-                        {.x = WIDE_34(-65), .y = 16},
-                        {.x = WIDE_34(-48), .y = 11},
-                        {.x = WIDE_34(-70), .y = 0},
-                        {.x = WIDE_34(-51), .y = 0},
-                        {.x = WIDE_34(-65), .y = -16},
-                        {.x = WIDE_34(-48), .y = -11},
-                        {.x = WIDE_34(-50), .y = -29},
-                        {.x = WIDE_34(-37), .y = -21},
-                        {.x = WIDE_34(-25), .y = -39},
-                        {.x = WIDE_34(-18), .y = -29},
-                        {.x = WIDE_34(0), .y = -42},
-                        {.x = WIDE_34(0), .y = -31},
-                        {.x = WIDE_34(25), .y = -39},
-                        {.x = WIDE_34(18), .y = -29},
+                        {.x = -65, .y = 16},
+                        {.x = -48, .y = 11},
+                        {.x = -70, .y = 0},
+                        {.x = -51, .y = 0},
+                        {.x = -65, .y = -16},
+                        {.x = -48, .y = -11},
+                        {.x = -50, .y = -29},
+                        {.x = -37, .y = -21},
+                        {.x = -25, .y = -39},
+                        {.x = -18, .y = -29},
+                        {.x = 0, .y = -42},
+                        {.x = 0, .y = -31},
+                        {.x = 25, .y = -39},
+                        {.x = 18, .y = -29},
                     },
                 },
 
@@ -7458,12 +7458,8 @@ struct Data
                                    .particle_funcPtr = 0x00000000,
                                    .particle_colorFlags = 0x08a3,
 
-// less particles on-screen
-#ifdef USE_REAL60PS1
-                                   .particle_lifespan = 0x0003,
-#else
+                                   // less particles on-screen
                                    .particle_lifespan = 0x0005,
-#endif
 
                                    .particle_Type = 0,
                                }},

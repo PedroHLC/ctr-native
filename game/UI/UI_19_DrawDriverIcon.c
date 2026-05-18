@@ -25,12 +25,6 @@ void DECOMP_UI_DrawDriverIcon(struct Icon *icon, Point point, u_long *ot, unsign
 	int bottomY = ((topY + FP_Mult(height, scale)) < 176) ? (topY + FP_Mult(height, scale)) : 175;
 #endif
 
-#ifdef USE_16BY9
-	int len = ((bottomX - topX) * 125) / 1000;
-	topX += len;
-	bottomX -= len;
-#endif
-
 	p->v[0].pos.x = topX;
 	p->v[0].pos.y = topY;
 	p->v[1].pos.x = bottomX;

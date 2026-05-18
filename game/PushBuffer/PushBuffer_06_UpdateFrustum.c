@@ -60,10 +60,6 @@ void DECOMP_PushBuffer_UpdateFrustum(struct PushBuffer *pb)
 	val_X = pb->rect.w;
 	val_X = val_X / 2;
 
-#ifdef USE_16BY9
-	val_X = (val_X * 1000) / 750;
-#endif
-
 	val_Y = ((pb->rect.h * 0x600) / 0x360);
 	val_Y = val_Y / 2;
 
@@ -103,20 +99,10 @@ void DECOMP_PushBuffer_UpdateFrustum(struct PushBuffer *pb)
 		// from end of PushBuffer_SetMatrixVP (called earlier)
 		read_mt(tx, ty, tz);
 
-#ifdef USE_16BY9
-		// === Widescreen extends far-clip ====
-		// wider frustum means direction goes less "far"
-		// I tried 0x200 for 16x9, it's close enough
-		// but 20x9 is broken no matter what
-		posX = (short)tx * 0x200 + cameraPosX;
-		posY = (short)ty * 0x200 + cameraPosY;
-		posZ = (short)tz * 0x200 + cameraPosZ;
-#else
 		// far clip: pos + dir*100
 		posX = (short)tx * 0x100 + cameraPosX;
 		posY = (short)ty * 0x100 + cameraPosY;
 		posZ = (short)tz * 0x100 + cameraPosZ;
-#endif
 
 		iVar19 = 0x1000;
 

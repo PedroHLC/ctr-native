@@ -3,14 +3,6 @@
 // byte budget
 // 840/1108
 
-#ifdef USE_HIGHMP
-extern struct MenuRow rowsOnlyVsBattle[3];
-#endif
-
-#if defined(USE_LEVELDEV) || defined(USE_LEVELDISC)
-extern struct MenuRow rowsOnlyTT[2];
-#endif
-
 void DECOMP_MM_MenuProc_Main(struct RectMenu *mainMenu)
 {
 	short choose;
@@ -19,14 +11,6 @@ void DECOMP_MM_MenuProc_Main(struct RectMenu *mainMenu)
 	// if scrapbook is unlocked, change "rows" to extended array
 	if ((sdata->gameProgress.unlocks[1] & 0x10) != 0)
 		mainMenu->rows = &D230.rowsMainMenuWithScrapbook[0];
-
-#if defined(USE_LEVELDEV) || defined(USE_LEVELDISC)
-	mainMenu->rows = &rowsOnlyTT[0];
-#endif
-
-#ifdef USE_HIGHMP
-	mainMenu->rows = &rowsOnlyVsBattle[0];
-#endif
 
 	DECOMP_MM_ParseCheatCodes();
 	DECOMP_MM_ToggleRows_Difficulty();
@@ -157,17 +141,6 @@ void DECOMP_MM_MenuProc_Main(struct RectMenu *mainMenu)
 		gGT->gameMode1 |= TIME_TRIAL;
 		gGT->gameMode2 &= ~(CHEAT_WUMPA | CHEAT_MASK | CHEAT_TURBO | CHEAT_ENGINE | CHEAT_BOMBS);
 
-#if defined(USE_LEVELDEV) || defined(USE_LEVELDISC)
-		sdata->gameProgress.unlocks[0] |= UNLOCK_CHARACTERS;
-		data.metaDataLEV[CUSTOM_LEVEL_ID].timeTrial = 0x7FFFFFFF;
-		if (sdata->ptrGhostTapePlaying == 0)
-		{
-			SelectProfile_ToggleMode(0x30);
-			sdata->boolReplayHumanGhost = 0;
-			sdata->ptrGhostTapePlaying = MEMPACK_AllocHighMem(0x3e00);
-		}
-#endif
-
 		return;
 	}
 
@@ -236,18 +209,3 @@ void DECOMP_MM_MenuProc_Main(struct RectMenu *mainMenu)
 		return;
 	}
 }
-
-#ifdef USE_HIGHMP
-struct MenuRow rowsOnlyVsBattle[3] = {
-    {0x4F, 0, 1, 0, 0},
-    {0x50, 0, 1, 1, 1},
-    {-1},
-};
-#endif
-
-#if defined(USE_LEVELDEV) || defined(USE_LEVELDISC)
-struct MenuRow rowsOnlyTT[2] = {
-    {0x4D, 0, 0, 0, 0},
-    {-1},
-};
-#endif

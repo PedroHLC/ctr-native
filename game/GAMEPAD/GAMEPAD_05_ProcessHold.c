@@ -14,18 +14,13 @@ void DECOMP_GAMEPAD_ProcessHold(struct GamepadSystem *gGamepads)
 	struct GamepadBuffer *pad;
 	struct ControllerPacket *ptrControllerPacket;
 
-#ifdef USE_4PADTEST
-	ptrControllerPacket = gGamepads->gamepad[0].ptrControllerPacket;
-#endif
 
 	// loop through all 8 gamepadBuffers
 	for (pad = &gGamepads->gamepad[0]; pad < &gGamepads->gamepad[8]; pad++)
 	{
 		pad->buttonsHeldPrevFrame = pad->buttonsHeldCurrFrame;
 
-#ifndef USE_4PADTEST
 		ptrControllerPacket = pad->ptrControllerPacket;
-#endif
 
 		// if pointer is invalid
 		if (ptrControllerPacket == NULL)
@@ -100,9 +95,5 @@ void DECOMP_GAMEPAD_ProcessHold(struct GamepadSystem *gGamepads)
 				pad->framesSinceLastInput = 0;
 			}
 		}
-
-#ifdef USE_REAL60PS1
-		break;
-#endif
 	}
 }

@@ -8,7 +8,7 @@ void DECOMP_DebugFont_DrawNumbers(int index, int screenPosX, int screenPosY)
   GetPrimMem(p);
   if (p == nullptr) { return; }
 
-  const int fontWidth = WIDE_34(7);
+  const int fontWidth = 7;
   const int fontHeight = 7;
 
   const PrimCode primCode = { .poly = { .renderCode = RenderCode_Polygon, .quad = 1, .textured = 1, .semiTransparency = 1 } };
@@ -55,7 +55,7 @@ void DECOMP_DebugFont_DrawNumbers(int index, int screenPosX, int screenPosY)
 	unsigned int uVar6;
 	struct GameTracker *gGT = sdata->gGT;
 
-	uVar6 = screenPosX + WIDE_PICK(7, 5);
+	uVar6 = screenPosX + 7;
 	uVar5 = (screenPosY + 0) << 0x10;
 	uVar4 = (screenPosY + 7) << 0x10;
 

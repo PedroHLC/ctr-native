@@ -39,10 +39,6 @@ void DECOMP_MainInit_OTMem(struct GameTracker *gGT)
 
 EndFunc:
 
-#ifdef USE_HIGHMP
-	size = 0x20000;
-#endif
-
 	DECOMP_MainDB_OTMem(&gGT->db[0].otMem, size);
 	DECOMP_MainDB_OTMem(&gGT->db[1].otMem, size);
 
