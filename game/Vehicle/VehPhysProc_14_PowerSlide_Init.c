@@ -41,48 +41,22 @@ void DECOMP_VehPhysProc_PowerSlide_Init(struct Thread *t, struct Driver *d)
 	}
 }
 
-#ifdef USE_60FPS
-void Hook60_DriverMain(struct Thread *t, struct Driver *d)
-{
-#ifndef REBUILD_PS1
-	if (sdata->gGT->timer & 1)
-	{
-		// next slot (8-frame cycle)
-		d->skidmarkFrameIndex = d->skidmarkFrameIndex - 1U & 7;
-	}
-
-	// block change
-	*(short *)0x80059a6c = 0;
-
-	VehEmitter_DriverMain(t, d);
-
-	// put it back, for non-drift functions
-	*(short *)0x80059a6c = -1;
-#endif
-}
-#endif
-
-void *PlayerDriftingFuncTable[13] = {
-    DECOMP_VehPhysProc_PowerSlide_InitSetUpdate,
-    NULL,
-    DECOMP_VehPhysProc_PowerSlide_PhysLinear,
-    DECOMP_VehPhysProc_Driving_Audio,
-    DECOMP_VehPhysProc_PowerSlide_PhysAngular,
-    DECOMP_VehPhysForce_OnApplyForces,
+void *PlayerDriftingFuncTable[13] = {DECOMP_VehPhysProc_PowerSlide_InitSetUpdate,
+                                     NULL,
+                                     DECOMP_VehPhysProc_PowerSlide_PhysLinear,
+                                     DECOMP_VehPhysProc_Driving_Audio,
+                                     DECOMP_VehPhysProc_PowerSlide_PhysAngular,
+                                     DECOMP_VehPhysForce_OnApplyForces,
 
 #ifndef REBUILD_PS1
-    COLL_MOVED_PlayerSearch,
-    VehPhysForce_CollideDrivers,
-    COLL_FIXED_PlayerSearch,
-    VehPhysGeneral_JumpAndFriction,
-    VehPhysForce_TranslateMatrix,
-    VehFrameProc_Driving,
+                                     COLL_MOVED_PlayerSearch,
+                                     VehPhysForce_CollideDrivers,
+                                     COLL_FIXED_PlayerSearch,
+                                     VehPhysGeneral_JumpAndFriction,
+                                     VehPhysForce_TranslateMatrix,
+                                     VehFrameProc_Driving,
 
-#ifdef USE_60FPS
-    Hook60_DriverMain,
-#else
-    VehEmitter_DriverMain
-#endif
+                                     VehEmitter_DriverMain
 
 #endif
 };

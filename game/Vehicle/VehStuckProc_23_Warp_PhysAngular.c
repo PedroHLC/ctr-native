@@ -12,10 +12,6 @@ void DECOMP_VehStuckProc_Warp_PhysAngular(struct Thread *th, struct Driver *d)
 	// get instance from driver object
 	struct Instance *inst = d->instSelf;
 
-#ifdef USE_60FPS
-	int halfTime = sdata->gGT->timer & 1;
-#endif
-
 	// if driver is visible
 	if ((inst->flags & HIDE_MODEL) == 0)
 	{
@@ -83,9 +79,6 @@ void DECOMP_VehStuckProc_Warp_PhysAngular(struct Thread *th, struct Driver *d)
 		}
 
 		else
-#ifdef USE_60FPS
-		    if (halfTime)
-#endif
 		{
 			d->KartStates.Warp.heightOffset -= 0x1800;
 			d->posCurr.y += d->KartStates.Warp.heightOffset;

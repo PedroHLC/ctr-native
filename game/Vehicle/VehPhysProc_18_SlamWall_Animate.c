@@ -7,10 +7,7 @@ void DECOMP_VehPhysProc_SlamWall_Animate(struct Thread *t, struct Driver *d)
 
 	inst->animFrame++;
 
-#ifdef USE_60FPS
-	if (sdata->gGT->timer & 1)
-#endif
-		d->matrixIndex++;
+	d->matrixIndex++;
 
 	// If crashing animation is not finished, quit function
 	if (

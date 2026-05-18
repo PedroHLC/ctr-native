@@ -31,37 +31,9 @@ void DECOMP_VehPhysProc_PowerSlide_PhysAngular(struct Thread *th, struct Driver 
 	iVar12_A = ((driver->axisRotationX - driver->angle) + 0x800U & 0xfff) - 0x800;
 	if (iVar12_A != 0)
 	{
-// 30fps
-#ifndef USE_60FPS
-
 		// decrease by 1/8
 		// val = val * 7/8
 		iVar13 = iVar12_A >> 3;
-
-// 60fps
-#else
-
-		// how to split division by 8,
-		// into two separate frames, which is
-		// exponentional at 30fps, but a hybrid
-		// linear/exponential at 60fps
-
-		if (gGT->timer & 1)
-		{
-			// 1/16, half of 1/8
-			iVar13 = iVar12_A >> 4;
-		}
-		else
-		{
-			// undo last frame's change,
-			// undo 1/16 change, with 16/15
-			iVar13 = (iVar12_A * 16) / 15;
-
-			// now take 1/8 of that
-			iVar13 = iVar13 >> 3;
-		}
-
-#endif
 
 		if (iVar13 == 0)
 		{
@@ -189,12 +161,8 @@ void DECOMP_VehPhysProc_PowerSlide_PhysAngular(struct Thread *th, struct Driver 
 	{
 	LAB_80063244:
 
-#ifdef USE_60FPS
-		if (gGT->timer & 1)
-#endif
-
-			// Interpolate by 1 unit, until zero
-			driver->KartStates.Drifting.numFramesDrifting = DECOMP_VehCalc_InterpBySpeed((int)driver->KartStates.Drifting.numFramesDrifting, 1, 0);
+		// Interpolate by 1 unit, until zero
+		driver->KartStates.Drifting.numFramesDrifting = DECOMP_VehCalc_InterpBySpeed((int)driver->KartStates.Drifting.numFramesDrifting, 1, 0);
 	}
 
 	// if holding a drift
@@ -203,11 +171,7 @@ void DECOMP_VehPhysProc_PowerSlide_PhysAngular(struct Thread *th, struct Driver 
 		// if drifting right
 		if (iVar15 < 1)
 		{
-#ifdef USE_60FPS
-			if (gGT->timer & 1)
-#endif
-
-				driver->KartStates.Drifting.numFramesDrifting--;
+			driver->KartStates.Drifting.numFramesDrifting--;
 
 			if (driver->KartStates.Drifting.numFramesDrifting > 0)
 				driver->KartStates.Drifting.numFramesDrifting = 0;
@@ -216,11 +180,7 @@ void DECOMP_VehPhysProc_PowerSlide_PhysAngular(struct Thread *th, struct Driver 
 		// if drifting left
 		else
 		{
-#ifdef USE_60FPS
-			if (gGT->timer & 1)
-#endif
-
-				driver->KartStates.Drifting.numFramesDrifting++;
+			driver->KartStates.Drifting.numFramesDrifting++;
 
 			if (driver->KartStates.Drifting.numFramesDrifting < 0)
 				driver->KartStates.Drifting.numFramesDrifting = 0;
@@ -293,21 +253,7 @@ LAB_800632cc:
 
 	iVar12_D = (iVar12_D + iVar15) - driver->turnAngleCurr;
 
-// Same trick as above ">>3"
-// which has more comments there
-#ifndef USE_60FPS
 	iVar15 = iVar12_D >> 3;
-#else
-	if (gGT->timer & 1)
-	{
-		iVar15 = iVar12_D >> 4;
-	}
-	else
-	{
-		iVar15 = (iVar12_D * 16) / 15;
-		iVar15 = iVar15 >> 3;
-	}
-#endif
 
 	sVar5 = (short)iVar15;
 	if (iVar12_D != 0)
@@ -448,21 +394,7 @@ void PhysLerpRot(struct Driver *driver, int iVar13)
 	if (iVar12_C < 0)
 		iVar12_C = -iVar12_C;
 
-// Same trick as above ">>3"
-// which has more comments there
-#ifndef USE_60FPS
 	uVar14 = iVar12_C >> 3;
-#else
-	if (sdata->gGT->timer & 1)
-	{
-		uVar14 = iVar12_C >> 4;
-	}
-	else
-	{
-		uVar14 = (iVar12_C * 16) / 15;
-		uVar14 = uVar14 >> 3;
-	}
-#endif
 
 	if (uVar14 == 0)
 	{

@@ -53,10 +53,7 @@ void DECOMP_MM_TrackSelect_Video_Draw(RECT *r, struct MainMenu_LevelRow *selectM
 			// Decode off-screen
 			int ret = 0;
 
-#ifdef USE_60FPS
-			if (gGT->timer & 1)
-#endif
-				ret = MM_Video_DecodeFrame(512, 0);
+			ret = MM_Video_DecodeFrame(512, 0);
 
 			if ((ret == 1) && (D230.trackSel_videoStateCurr == 2))
 			{

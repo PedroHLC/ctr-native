@@ -117,11 +117,8 @@ LAB_800ad5f8:
 			PlaySound3D(0x3e, inst);
 		}
 
-#ifdef USE_60FPS
-		if (sdata->gGT->timer & 1)
-#endif
-			// add to the frame counter
-			mw->numFramesOnHead += 1;
+		// add to the frame counter
+		mw->numFramesOnHead += 1;
 
 		// set scale of TNT, given frame of animation
 		uVar3 = ((short *)0x800b295c)[numFrames * 2 + 0];

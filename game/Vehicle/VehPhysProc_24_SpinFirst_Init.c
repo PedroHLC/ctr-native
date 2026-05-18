@@ -3,31 +3,22 @@
 void COLL_MOVED_PlayerSearch();
 void COLL_FIXED_PlayerSearch();
 
-#ifdef USE_60FPS
-void Hook60_DriverMain(struct Thread *t, struct Driver *d);
-#endif
-
-void *PlayerSpinningFuncTable[0xD] = {
-    DECOMP_VehPhysProc_SpinFirst_InitSetUpdate,
-    0,
-    DECOMP_VehPhysProc_SpinFirst_PhysLinear,
-    DECOMP_VehPhysProc_Driving_Audio,
-    DECOMP_VehPhysProc_SpinFirst_PhysAngular,
-    DECOMP_VehPhysForce_OnApplyForces,
+void *PlayerSpinningFuncTable[0xD] = {DECOMP_VehPhysProc_SpinFirst_InitSetUpdate,
+                                      0,
+                                      DECOMP_VehPhysProc_SpinFirst_PhysLinear,
+                                      DECOMP_VehPhysProc_Driving_Audio,
+                                      DECOMP_VehPhysProc_SpinFirst_PhysAngular,
+                                      DECOMP_VehPhysForce_OnApplyForces,
 
 #ifndef REBUILD_PS1
-    COLL_MOVED_PlayerSearch,
-    VehPhysForce_CollideDrivers,
-    COLL_FIXED_PlayerSearch,
-    VehPhysGeneral_JumpAndFriction,
-    VehPhysForce_TranslateMatrix,
-    VehFrameProc_Spinning,
+                                      COLL_MOVED_PlayerSearch,
+                                      VehPhysForce_CollideDrivers,
+                                      COLL_FIXED_PlayerSearch,
+                                      VehPhysGeneral_JumpAndFriction,
+                                      VehPhysForce_TranslateMatrix,
+                                      VehFrameProc_Spinning,
 
-#ifdef USE_60FPS
-    Hook60_DriverMain,
-#else
-    VehEmitter_DriverMain
-#endif
+                                      VehEmitter_DriverMain
 
 #endif
 };

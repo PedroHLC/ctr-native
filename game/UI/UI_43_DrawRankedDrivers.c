@@ -24,12 +24,8 @@ int DriverIndex_GetDamageColor(int iVar14)
 		local_30 += (0xFF - strength) * 0x100;
 		local_30 += strength * 0x10000;
 
-#ifdef USE_60FPS
-		if (gGT->timer & 1)
-#endif
-
-			// one frame closer to zero
-			d->damageColorTimer += 1;
+		// one frame closer to zero
+		d->damageColorTimer += 1;
 	}
 
 	// 30 to 1
@@ -41,12 +37,8 @@ int DriverIndex_GetDamageColor(int iVar14)
 		local_30 += strength * 0x100;
 		local_30 += strength * 0x10000;
 
-#ifdef USE_60FPS
-		if (gGT->timer & 1)
-#endif
-
-			// one frame closer to zero
-			d->damageColorTimer -= 1;
+		// one frame closer to zero
+		d->damageColorTimer -= 1;
 	}
 
 	return local_30;

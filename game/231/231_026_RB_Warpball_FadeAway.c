@@ -40,10 +40,7 @@ void DECOMP_RB_Warpball_FadeAway(struct Thread *t)
 
 	inst->matrix.t[1] = tw->distFromGround + ((int *)0x800b2cac)[frameId];
 
-#ifdef USE_60FPS
-	if (gGT->timer & 1)
-#endif
-		tw->fadeAway_frameCount5 += 1;
+	tw->fadeAway_frameCount5 += 1;
 
 	return;
 }

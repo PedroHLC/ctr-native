@@ -141,11 +141,8 @@ void DECOMP_RB_ShieldDark_ThTick_Grow(struct Thread *th)
 		colorInst->scale[1] = scaleY;
 		colorInst->scale[2] = scaleXZ;
 
-#ifdef USE_60FPS
-		if (sdata->gGT->timer & 1)
-#endif
-			// next frame
-			shield->animFrame++;
+		// next frame
+		shield->animFrame++;
 	}
 
 	// if animation is done

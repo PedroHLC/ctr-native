@@ -49,11 +49,8 @@ void DECOMP_RB_ShieldDark_ThTick_Pop(struct Thread *t)
 		instColor->scale[1] = animSeq[animFrame * 2 + 1];
 		instColor->scale[2] = animSeq[animFrame * 2 + 0];
 
-#ifdef USE_60FPS
-		if (sdata->gGT->timer & 1)
-#endif
-			// next frame
-			sh->animFrame += 1;
+		// next frame
+		sh->animFrame += 1;
 
 		return;
 	}

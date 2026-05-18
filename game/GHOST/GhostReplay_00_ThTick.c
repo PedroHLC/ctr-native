@@ -349,10 +349,6 @@ void DECOMP_GhostReplay_ThTick(struct Thread *t)
 				if (inst->animFrame > 0x10)
 					inst->animFrame = 0x10;
 
-#ifdef USE_60FPS
-				inst->animFrame = FPS_DOUBLE(inst->animFrame);
-#endif
-
 				buffer += 3;
 			}
 			break;

@@ -45,166 +45,11 @@ void RB_Follower_ProcessBucket(struct Thread *thread);
 void RB_StartText_ProcessBucket(struct Thread *thread);
 u_int MM_Video_CheckIfFinished(int param_1);
 
-#ifdef USE_60FPS
-void PatchModel_60fps(struct Model *m)
-{
-	struct ModelHeader *h;
-	struct ModelAnim **a;
-	int i;
-	int j;
-	int loopNum;
-	struct Thread *search;
-
-	// error check (yes, needed)
-	if (m == 0)
-		return;
-
-	// model header
-	h = m->headers;
-
-	// skip if the model is patched
-	if (h[0].name[0xf] == 1)
-		return;
-
-	// record the model is patched
-	h[0].name[0xf] = 1;
-
-	// skip "big1" because it needs LODs
-	// to shift from 1st to 8th UI polygons
-	if (*(int *)&h[0].name[0] == 0x31676962)
-		return;
-
-#if 1
-	// Only do this for drivers, because we dont have
-	// enough primitives to boost "all" instance LODs,
-	// but also LOD[1] and LOD[2] for drivers are lerp'd,
-	// so we cant force-lerp with pre-lerp'd animations
-	if (m->id == -1)
-	{
-		// human drivers have 1 LOD,
-		// robotcar AIs have 4 LODs
-		if (m->numHeaders == 4)
-		{
-			// LODs are 0x140, 0x258, 0x550, 0x2000
-
-			// expand range of LOD[0], but dont expand
-			// all the way to LOD[3], cause polygons
-			// explode when they get too small on-screen
-			h[0].maxDistanceLOD = 0x1000;
-
-			// skip LOD[1] and LOD[2]
-			h[1].maxDistanceLOD = 0;
-			h[2].maxDistanceLOD = 0;
-
-			// dont touch LOD[3], that is the cutoff
-			// to stop rendering the model. Without that,
-			// polygons explode in the distance
-		}
-	}
-#endif
-
-#if 0
-	// min graphics
-	for(i = 0; i < m->numHeaders-1; i++)
-	{
-		h[i].maxDistanceLOD = 0;
-	}
-#endif
-
-	// loop through headers
-	for (i = 0; i < m->numHeaders; i++)
-	{
-		// pointer to array of pointers
-		a = h[i].ptrAnimations;
-
-		// number of animations
-		loopNum = h[i].numAnimations;
-
-		// loop through all animations
-		for (j = 0; j < loopNum; j++)
-		{
-			// skip doubling, if interpolation already happens,
-			// known to happen in spiders, and drivers for
-			// low LOD anims, and high LOD crashing + reversing
-			if (a[j]->numFrames & 0x8000)
-				continue;
-
-			// multiply by 2
-			a[j]->numFrames = a[j]->numFrames << 1;
-
-			// should only need to subtract one,
-			// but then many animations break on last frame,
-			// need to patch code that manipulates last frame
-			a[j]->numFrames--;
-
-			// negative, or flag?
-			a[j]->numFrames = a[j]->numFrames | 0x8000;
-		}
-	}
-}
-void ScanInstances_60FPS(struct GameTracker *gGT)
-{
-	struct JitPool *instPool = &sdata->gGT->JitPools.instance;
-
-	// check if pool is empty
-	if (instPool->free.count == 0)
-		return;
-	if (instPool->taken.first == 0)
-		return;
-
-	// ignore ND box, intro models, oxide intro, podiums, etc
-	if (DECOMP_LOAD_IsOpen_Podiums())
-	{
-		struct Driver *d = gGT->drivers[0];
-		if (d == 0)
-			return;
-
-		struct Instance *i = d->instSelf;
-		if (i == 0)
-			return;
-
-		struct Model *m = i->model;
-		if (m == 0)
-			return;
-
-#ifdef USE_60FPS
-		// need this, or it'll somehow become
-		// 0x13 instead of 0x14? May as well leave it here
-		i->animFrame = FPS_DOUBLE(10);
-#endif
-
-		// make an exception for driver when 233 is still
-		// loaded, and aku/uka says "congratulations, you win"
-		PatchModel_60fps(m);
-
-		// nothing else
-		return;
-	}
-
-	for (struct Instance *inst = (struct Instance *)instPool->taken.first; inst != NULL; inst = inst->next)
-	{
-		PatchModel_60fps(inst->model);
-	}
-
-	if (gGT->level1 != 0)
-		for (unsigned int i = 0; i < gGT->level1->numInstances; i++)
-		{
-			struct Instance *inst = gGT->level1->ptrInstDefs[i].ptrInstance;
-
-			if (inst != 0)
-				PatchModel_60fps(inst->model);
-		}
-}
-#endif
 
 void DECOMP_MainFrame_RenderFrame(struct GameTracker *gGT, struct GamepadSystem *gGamepads)
 {
 	struct Level *lev = gGT->level1;
 
-#ifdef USE_60FPS
-	if ((gGT->renderFlags & 0x20) != 0)
-		ScanInstances_60FPS(gGT);
-#endif
 
 	DrawUnpluggedMsg(gGT, gGamepads);
 	DrawFinalLap(gGT);
@@ -1713,16 +1558,10 @@ void RenderVSYNC(struct GameTracker *gGT)
 	// render checkered flag
 	if ((gGT->renderFlags & 0x1000) != 0)
 	{
-#ifdef USE_60FPS
-		// if main menu runs at 45fps,
-		// do NOT cap to 30fps
-		if (gGT->levelID != MAIN_MENU_LEVEL)
-#endif
-
-			// Wait until "next" vsync,
-			// Main Menu at 45fps will cap to 30fps
-			// Levels+RaceFlag at 25fps will cap to 20fps
-			VSync(0);
+		// Wait until "next" vsync,
+		// Main Menu at 45fps will cap to 30fps
+		// Levels+RaceFlag at 25fps will cap to 20fps
+		VSync(0);
 	}
 
 

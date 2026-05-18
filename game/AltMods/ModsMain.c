@@ -20,10 +20,6 @@ void ModsMain()
 {
 // PC port can't do mips asm injection
 #ifndef REBUILD_PC
-#ifdef USE_60FPS
-	void ui60_entryHook();
-	ui60_entryHook();
-#endif
 #endif
 
 #ifdef USE_BOOSTBAR

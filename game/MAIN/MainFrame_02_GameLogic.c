@@ -240,21 +240,6 @@ void DECOMP_MainFrame_GameLogic(struct GameTracker *gGT, struct GamepadSystem *g
 								pcVar5(psVar12, psVar9);
 							}
 #endif
-
-#ifdef USE_60FPS
-#ifndef REBUILD_PS1
-							// if this function just ran
-							if (pcVar5 == VehFrameProc_Driving)
-							{
-								// only if jumping animation,
-								// otherwise wheelie gets bugged
-								if (psVar9->instSelf->animIndex == 3)
-								{
-									psVar9->matrixIndex = psVar9->matrixIndex >> 1;
-								}
-							}
-#endif
-#endif
 						}
 
 // rig collisions to high-poly,
@@ -295,50 +280,6 @@ void DECOMP_MainFrame_GameLogic(struct GameTracker *gGT, struct GamepadSystem *g
 
 #ifndef REBUILD_PS1
 
-#ifdef USE_60FPS
-
-		// This does not fix Underwater, or particles with function pointers
-		for (struct Particle *p = gGT->particleList_ordinary; p != 0; p = p->next)
-		{
-			// if TireAxis is in use
-			if ((p->flagsAxis & (0x1 << 0xA)) != 0)
-			{
-				// use ColorB axis, guaranteed not in use,
-				// check here for patching, 4 divides to 2 in FOR-loop
-				if (p->axis[0x9].startVal != 0)
-					continue;
-				p->axis[0x9].startVal = 4;
-			}
-
-			// TireAxis is not in use
-			else
-			{
-				// check here for patching, 4 divides to 2 in FOR-loop
-				if (p->axis[0xA].startVal != 0)
-					continue;
-				p->axis[0xA].startVal = 4;
-			}
-
-			// === If unpatched particle ===
-
-			p->framesLeftInLife *= 2;
-
-			for (int axis = 0; axis < 0xb; axis++)
-			{
-				p->axis[axis].velocity /= 2;
-				p->axis[axis].accel /= 2;
-			}
-		}
-
-		// For byte budget, forget heat warp,
-		// it only draws in Tiger Temple anyway
-
-		// for(struct Particle* p = gGT->particleList_heatWarp; p != 0; p = p->next)
-		//{
-		//	p->axis[7].velocity = 0x30;
-		// }
-
-#endif // 60fps
 
 		Particle_UpdateAllParticles();
 

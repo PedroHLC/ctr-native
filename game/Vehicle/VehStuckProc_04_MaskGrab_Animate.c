@@ -73,13 +73,7 @@ void DECOMP_VehStuckProc_MaskGrab_Animate(struct Thread *t, struct Driver *d)
 
 
 		// logic specific to maskgrab
-#ifdef USE_60FPS
-		frame = maskGrabAnimFrame;
-		if (gGT->timer & 1)
-			frame++;
-#else
 		frame = maskGrabAnimFrame + 1;
-#endif
 
 		if (frame > 7)
 			frame = 7;

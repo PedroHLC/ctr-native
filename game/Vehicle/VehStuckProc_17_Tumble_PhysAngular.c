@@ -6,18 +6,9 @@ void DECOMP_VehStuckProc_Tumble_PhysAngular(struct Thread *thread, struct Driver
 
 	driver->numFramesSpentSteering = 10000;
 
-#ifdef USE_60FPS
-	if (sdata->gGT->timer & 1)
-	{
-#endif
-
-		driver->unk3D4[0] -= (driver->unk3D4[0] >> 3);
-		driver->rotationSpinRate -= (driver->rotationSpinRate >> 3);
-		driver->unk_LerpToForwards -= (driver->unk_LerpToForwards >> 3);
-
-#ifdef USE_60FPS
-	}
-#endif
+	driver->unk3D4[0] -= (driver->unk3D4[0] >> 3);
+	driver->rotationSpinRate -= (driver->rotationSpinRate >> 3);
+	driver->unk_LerpToForwards -= (driver->unk_LerpToForwards >> 3);
 
 	driver->ampTurnState = driver->rotationSpinRate;
 

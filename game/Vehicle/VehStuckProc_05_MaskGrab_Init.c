@@ -62,11 +62,6 @@ void DECOMP_VehStuckProc_MaskGrab_Init(struct Thread *t, struct Driver *d)
 			d->KartStates.MaskGrab.AngleAxis_NormalVec[1] = d->AxisAngle2_normalVec[1];
 			d->KartStates.MaskGrab.AngleAxis_NormalVec[2] = d->AxisAngle2_normalVec[2];
 
-#ifdef USE_60FPS
-			// for particles
-			sdata->UnusedPadding1 = 1;
-#endif
-
 			// spawn particles
 			for (int i = 10; i > 0; i--)
 			{
@@ -86,52 +81,48 @@ void DECOMP_VehStuckProc_MaskGrab_Init(struct Thread *t, struct Driver *d)
 				// driverID
 				p->unk19 = d->driverID;
 			}
-
-#ifdef USE_60FPS
-			// for particles
-			sdata->UnusedPadding1 = 0;
-#endif
-		}
-
-		// if driver did not touch surface (and is still falling)
-		else
-		{
-			// save result in a bool
-			d->KartStates.MaskGrab.boolStillFalling = true;
 		}
 	}
+
+	// if driver did not touch surface (and is still falling)
 	else
 	{
-		// AngleAxis normalVec
-		d->KartStates.MaskGrab.AngleAxis_NormalVec[0] = d->AxisAngle2_normalVec[0];
-		d->KartStates.MaskGrab.AngleAxis_NormalVec[1] = d->AxisAngle2_normalVec[1];
-		d->KartStates.MaskGrab.AngleAxis_NormalVec[2] = d->AxisAngle2_normalVec[2];
+		// save result in a bool
+		d->KartStates.MaskGrab.boolStillFalling = true;
 	}
+}
+else
+{
+	// AngleAxis normalVec
+	d->KartStates.MaskGrab.AngleAxis_NormalVec[0] = d->AxisAngle2_normalVec[0];
+	d->KartStates.MaskGrab.AngleAxis_NormalVec[1] = d->AxisAngle2_normalVec[1];
+	d->KartStates.MaskGrab.AngleAxis_NormalVec[2] = d->AxisAngle2_normalVec[2];
+}
 
-	// edits position
-	d->posCurr.x = inst->matrix.t[0] << 8;
-	d->posCurr.y = inst->matrix.t[1] << 8;
-	d->posCurr.z = inst->matrix.t[2] << 8;
+// edits position
+d->posCurr.x = inst->matrix.t[0] << 8;
+d->posCurr.y = inst->matrix.t[1] << 8;
+d->posCurr.z = inst->matrix.t[2] << 8;
 
-	// set previous frame velocity to the same as current frame velocity
-	d->posCurr.x = d->posPrev.x;
-	d->posCurr.y = d->posPrev.y;
-	d->posCurr.z = d->posPrev.z;
+// set previous frame velocity to the same as current frame velocity
+d->posCurr.x = d->posPrev.x;
+d->posCurr.y = d->posPrev.y;
+d->posCurr.z = d->posPrev.z;
 
-	for (int i = 0; i < 13; i++)
-		d->funcPtrs[i] = PlayerMaskGrabFuncTable[i];
+for (int i = 0; i < 13; i++)
+	d->funcPtrs[i] = PlayerMaskGrabFuncTable[i];
 
-	struct MaskHeadWeapon *mask = d->KartStates.MaskGrab.maskObj;
+struct MaskHeadWeapon *mask = d->KartStates.MaskGrab.maskObj;
 
-	// no maskObj in adventure arena mask-grab
-	if (mask == NULL)
-		return;
+// no maskObj in adventure arena mask-grab
+if (mask == NULL)
+	return;
 
-	mask->rot[2] |= 1;
+mask->rot[2] |= 1;
 
-	mask->pos[0] = d->posCurr.x >> 8;
-	mask->pos[1] = (d->posCurr.y >> 8) + 0x140;
-	mask->pos[2] = d->posCurr.z >> 8;
+mask->pos[0] = d->posCurr.x >> 8;
+mask->pos[1] = (d->posCurr.y >> 8) + 0x140;
+mask->pos[2] = d->posCurr.z >> 8;
 }
 
 void DECOMP_VehStuckProc_MaskGrab_Particles(struct Driver *d);

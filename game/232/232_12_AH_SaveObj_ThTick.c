@@ -182,12 +182,8 @@ LAB_800af72c:
 		// if animation is not finished
 		if ((int)sVar1 < iVar7 - 1)
 		{
-#ifdef USE_60FPS
-			if (gGT->timer & 1)
-#endif
-
-				// increment animation frame
-				saveInst->animFrame += 1;
+			// increment animation frame
+			saveInst->animFrame += 1;
 		}
 
 #ifndef REBUILD_PS1

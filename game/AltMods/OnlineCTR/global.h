@@ -55,11 +55,7 @@
 	((rn >= ROOM_RETROSTART && rn < (ROOM_RETROSTART + ROOM_RETROLENGTH)) || (rn >= ROOM_ITEMRETROSTART && rn < (ROOM_ITEMRETROSTART + ROOM_ITEMRETROLENGTH)))
 
 // 2 seconds to be very tolerant on client
-#ifdef USE_60FPS
-#define DISCONNECT_AT_UNSYNCED_FRAMES 120
-#else
 #define DISCONNECT_AT_UNSYNCED_FRAMES 60
-#endif
 
 enum ClientState
 {

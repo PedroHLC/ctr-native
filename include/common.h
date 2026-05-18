@@ -6,7 +6,6 @@
 #define USE_ALTMODS // Enable this before ANY other mods
 
 // 2mb
-// #define USE_60FPS		// 60 frames per second
 // #define USE_16BY9		// Widescreen
 // #define USE_NEW2P		// Requires 16BY9: Side-By-Side 2P
 // #define USE_OXIDE		// Unlock Oxide
@@ -95,7 +94,6 @@ enum HotReloadSteps
 
 // Required for Online
 #ifdef USE_ONLINE
-// #define USE_60FPS
 #define USE_BOOSTBAR
 #define USE_16BY9
 #define USE_RAMEX
@@ -108,19 +106,11 @@ enum HotReloadSteps
 #endif
 
 
-// Required for 60fps
-#ifdef USE_60FPS
-#define USE_DRIVERLOD     // patch LODs
-#define FPS_DOUBLE(x)     ((x) * 2)
-#define FPS_HALF(x)       ((x) / 2)
-#define FPS_LEFTSHIFT(x)  ((x) - 1)
-#define FPS_RIGHTSHIFT(x) ((x) + 1)
-#else
+// Required for 60fps (removed, ctr-native uses fixed 30Hz simulation)
 #define FPS_DOUBLE(x)     (x)
 #define FPS_HALF(x)       (x)
 #define FPS_LEFTSHIFT(x)  (x)
 #define FPS_RIGHTSHIFT(x) (x)
-#endif
 
 
 // WIDE_PICK:

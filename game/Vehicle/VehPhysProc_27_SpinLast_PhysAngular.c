@@ -9,17 +9,8 @@ void DECOMP_VehPhysProc_SpinLast_PhysAngular(struct Thread *t, struct Driver *d)
 
 	d->numFramesSpentSteering = 10000;
 
-#ifdef USE_60FPS
-	if (sdata->gGT->timer & 1)
-	{
-#endif
-
-		d->rotationSpinRate -= d->rotationSpinRate >> 3;
-		d->unk3D4[0] -= d->unk3D4[0] >> 3;
-
-#ifdef USE_60FPS
-	}
-#endif
+	d->rotationSpinRate -= d->rotationSpinRate >> 3;
+	d->unk3D4[0] -= d->unk3D4[0] >> 3;
 
 	d->ampTurnState = d->rotationSpinRate;
 

@@ -40,31 +40,22 @@ void DECOMP_VehPhysProc_Driving_Init(struct Thread *t, struct Driver *d)
 	}
 }
 
-#ifdef USE_60FPS
-void Hook60_DriverMain(struct Thread *t, struct Driver *d);
-#endif
-
-void *PlayerDrivingFuncTable[13] = {
-    NULL,
-    DECOMP_VehPhysProc_Driving_Update,
-    DECOMP_VehPhysProc_Driving_PhysLinear,
-    DECOMP_VehPhysProc_Driving_Audio,
-    DECOMP_VehPhysGeneral_PhysAngular,
-    DECOMP_VehPhysForce_OnApplyForces,
+void *PlayerDrivingFuncTable[13] = {NULL,
+                                    DECOMP_VehPhysProc_Driving_Update,
+                                    DECOMP_VehPhysProc_Driving_PhysLinear,
+                                    DECOMP_VehPhysProc_Driving_Audio,
+                                    DECOMP_VehPhysGeneral_PhysAngular,
+                                    DECOMP_VehPhysForce_OnApplyForces,
 
 #ifndef REBUILD_PS1
-    COLL_MOVED_PlayerSearch,
-    VehPhysForce_CollideDrivers,
-    COLL_FIXED_PlayerSearch,
-    VehPhysGeneral_JumpAndFriction,
-    VehPhysForce_TranslateMatrix,
-    VehFrameProc_Driving,
+                                    COLL_MOVED_PlayerSearch,
+                                    VehPhysForce_CollideDrivers,
+                                    COLL_FIXED_PlayerSearch,
+                                    VehPhysGeneral_JumpAndFriction,
+                                    VehPhysForce_TranslateMatrix,
+                                    VehFrameProc_Driving,
 
-#ifdef USE_60FPS
-    Hook60_DriverMain,
-#else
-    VehEmitter_DriverMain
-#endif
+                                    VehEmitter_DriverMain
 
 #endif
 };

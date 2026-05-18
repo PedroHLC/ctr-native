@@ -109,11 +109,6 @@ void DECOMP_RB_Plant_ThTick_Eat(struct Thread *t)
 					DECOMP_OtherFX_Play(0x6f, 0);
 				}
 
-#ifdef USE_60FPS
-				// for particles
-				sdata->UnusedPadding1 = 1;
-#endif
-
 				for (i = 0; i < 4; i++)
 				{
 					// spit tires
@@ -150,11 +145,6 @@ void DECOMP_RB_Plant_ThTick_Eat(struct Thread *t)
 					                                  (DECOMP_MixRNG_Scramble() & 10 + 0x10) * (plantInst->matrix.m[2][2] >> 0xC)) *
 					                              0x100;
 				}
-
-#ifdef USE_60FPS
-				// for particles
-				sdata->UnusedPadding1 = 0;
-#endif
 			}
 		}
 

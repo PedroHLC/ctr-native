@@ -112,20 +112,8 @@ void DECOMP_UI_Weapon_DrawSelf(short posX, short posY, short scale, struct Drive
 				}
 			}
 
-// only change icon once per 2 frames,
-// take advantage of unused padding
-#ifdef USE_60FPS
-			if (gGT->timer & 1)
-			{
-				// backup
-				d->funcPtrs_compilerpadding = itemID;
-			}
-			else
-			{
-				// restore
-				itemID = d->funcPtrs_compilerpadding;
-			}
-#endif
+			// only change icon once per 2 frames,
+			// take advantage of unused padding
 		}
 
 		// if timer is not finished

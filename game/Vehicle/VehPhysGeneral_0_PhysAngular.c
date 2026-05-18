@@ -199,18 +199,9 @@ void DECOMP_VehPhysGeneral_PhysAngular(struct Thread *thread, struct Driver *dri
 
 	driftAngleCurr_og = driver->turnAngleCurr;
 
-#ifdef USE_60FPS
-	if (sdata->gGT->timer & 1)
-	{
-#endif
-
-		// spins camera from side of driver, to back of driver,
-		// when the drifting ends. "LerpToForwards"
-		driver->unk_LerpToForwards = DECOMP_VehPhysGeneral_LerpToForwards(driver, (int)driftAngleCurr_og, (int)forwardDir, classSpeed_halved);
-
-#ifdef USE_60FPS
-	}
-#endif
+	// spins camera from side of driver, to back of driver,
+	// when the drifting ends. "LerpToForwards"
+	driver->unk_LerpToForwards = DECOMP_VehPhysGeneral_LerpToForwards(driver, (int)driftAngleCurr_og, (int)forwardDir, classSpeed_halved);
 
 	classSpeed_halved = (int)(short)driver->unk_LerpToForwards;
 

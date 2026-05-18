@@ -164,10 +164,7 @@ void DECOMP_VehTurbo_ThTick(struct Thread *turboThread)
 	// STATIC_TURBO_EFFECT7
 	turbo->inst->model = gGT->modelPtr[((int)turbo->fireAnimIndex + 3U & 7) + STATIC_TURBO_EFFECT];
 
-#ifdef USE_60FPS
-	if (gGT->timer & 1)
-#endif
-		turbo->fireAnimIndex++;
+	turbo->fireAnimIndex++;
 
 	// if higher than 7, back to zero
 	turbo->fireAnimIndex &= 7;

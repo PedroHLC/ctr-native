@@ -48,21 +48,7 @@ void RunVehicleSet13(struct Thread* dThread, struct Driver* dOnline)
 		
 		RunVehicleThread(pcVar5, dThread, dOnline);
 
-#ifdef USE_60FPS
-#ifndef REBUILD_PS1
-				// if this function just ran
-				if(pcVar5 == VehFrameProc_Driving)
-				{
-					// only if jumping animation,
-					// otherwise wheelie gets bugged
-					if(dOnline->instSelf->animIndex == 3)
-					{
-						dOnline->matrixIndex =
-						dOnline->matrixIndex >> 1;
-					}
-				}
-#endif
-#endif
+
 	}
 }
 #endif

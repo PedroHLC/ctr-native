@@ -113,14 +113,9 @@ void DECOMP_CS_Garage_MenuProc(struct RectMenu *param_1)
 	// CameraDC, freecam mode
 	gGT->cameraDC[0].cameraMode = 3;
 
-#ifdef USE_60FPS
-	if ((gGT->timer & 1) == 0)
-		garageFrames = gGarage.numFramesCurr_GarageMove;
-	else
-#endif
 
-		// subtract transition timer by one frame
-		garageFrames = gGarage.numFramesCurr_GarageMove - 1;
+	// subtract transition timer by one frame
+	garageFrames = gGarage.numFramesCurr_GarageMove - 1;
 
 	// if mid-transition, skip some code
 	if (gGarage.numFramesCurr_GarageMove != 0)
@@ -144,12 +139,8 @@ void DECOMP_CS_Garage_MenuProc(struct RectMenu *param_1)
 		stat = WIDE_34(stat);
 #endif
 
-// half bar length, half speed per frame, just add 1
-#if (defined(USE_60FPS) && defined(USE_16BY9))
-#define BAR_RATE 1
-#else
+
 #define BAR_RATE 3
-#endif
 
 		if (*barLen < stat)
 			*barLen = *barLen + BAR_RATE;
@@ -523,12 +514,8 @@ SKIP_CONTROLS:
 	// if frames remaing for zoom camera
 	if (0 < gGarage.numFramesCurr_ZoomIn)
 	{
-#ifdef USE_60FPS
-		if (gGT->timer & 1)
-#endif
-
-			// decrease zoom frame timer
-			gGarage.numFramesCurr_ZoomIn--;
+		// decrease zoom frame timer
+		gGarage.numFramesCurr_ZoomIn--;
 	}
 
 	// if pressed X once, and waited for countdown clock
@@ -558,10 +545,7 @@ SKIP_CONTROLS:
 
 		else
 		{
-#ifdef USE_60FPS
-			if (gGT->timer & 1)
-#endif
-				gGarage.delayOneSecond++;
+			gGarage.delayOneSecond++;
 		}
 	}
 
@@ -585,10 +569,7 @@ SKIP_CONTROLS:
 
 	if (gGarage.numFramesCurr_ZoomOut != 0)
 	{
-#ifdef USE_60FPS
-		if (gGT->timer & 1)
-#endif
-			gGarage.numFramesCurr_ZoomOut--;
+		gGarage.numFramesCurr_ZoomOut--;
 	}
 
 	u_int prevSelectIndex = sdata->advCharSelectIndex_prev;
@@ -617,58 +598,6 @@ SKIP_CONTROLS:
 	short camPos[3];
 	short camRot[3];
 	DECOMP_CAM_Path_Move((int)garageFrames, &camPos[0], &camRot[0], &getPath);
-
-#ifdef USE_60FPS
-
-	// if transitioning
-	if (gGarage.numFramesCurr_GarageMove != 0)
-	{
-		// if counter wasn't moved this frame
-		if ((gGT->timer & 1) == 0)
-		{
-			// Pura->Crash
-			if ((sdata->advCharSelectIndex_curr == 0) && (sdata->advCharSelectIndex_prev == 7))
-				garageFrames = 240 - (gGarage.numFramesCurr_GarageMove - 1);
-
-			// Crash->Pura
-			else if ((sdata->advCharSelectIndex_curr == 7) && (sdata->advCharSelectIndex_prev == 0))
-				garageFrames = (gGarage.numFramesCurr_GarageMove - 1) + 210;
-
-			// Move Right
-			else if (sdata->advCharSelectIndex_prev < sdata->advCharSelectIndex_curr)
-				garageFrames = sdata->advCharSelectIndex_curr * 30 - (gGarage.numFramesCurr_GarageMove - 1);
-
-			// Move Left
-			else
-				garageFrames = sdata->advCharSelectIndex_curr * 30 + (gGarage.numFramesCurr_GarageMove - 1);
-
-			short camPos2[3];
-			short camRot2[3];
-			DECOMP_CAM_Path_Move((int)garageFrames, &camPos2[0], &camRot2[0], &getPath);
-
-			camPos[0] = (camPos[0] + camPos2[0]) / 2;
-			camPos[1] = (camPos[1] + camPos2[1]) / 2;
-			camPos[2] = (camPos[2] + camPos2[2]) / 2;
-
-			int diff = camRot[1] - camRot2[1];
-			if (diff < 0)
-				diff = -diff;
-
-			// on the one frame that jumps from
-			// 359 degrees -> 1 degree, just ignore
-			// interpolation. Nobody will notice a one-frame
-			// gap between Polar and Pura where it reuses the
-			// old frame's rotation, with lerp'd position
-			if (diff < 0x800)
-			{
-				camRot[0] = (camRot[0] + camRot2[0]) / 2;
-				camRot[1] = (camRot[1] + camRot2[1]) / 2;
-				camRot[2] = (camRot[2] + camRot2[2]) / 2;
-			}
-		}
-	}
-
-#endif
 
 	// set position and rotation to pushBuffer
 	gGT->pushBuffer[0].pos[0] = camPos[0];
