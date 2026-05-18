@@ -9,7 +9,7 @@ void DECOMP_MainInit_VRAMDisplay()
 	short y[2];
 
 #ifdef REBUILD_PC
-	PsyX_BeginScene();
+	Platform_BeginFrame();
 #endif
 
 	x[0] = 0;
@@ -37,6 +37,6 @@ void DECOMP_MainInit_VRAMDisplay()
 	}
 
 #ifdef REBUILD_PC
-	PsyX_EndScene();
+	Platform_EndFrame();
 #endif
 }

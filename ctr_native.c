@@ -165,6 +165,7 @@ int main(int argc, char *argv[])
 
 	Platform_InitFilesystem("assets/ctr-u.bin");
 
+	// NOTE(aalhendi): PsyCross swap interval - combined with VSync() below, locks to 30fps
 	PsyX_SetSwapInterval(2);
 	PsyX_EnableSwapInterval(1);
 
@@ -181,6 +182,7 @@ int main(int argc, char *argv[])
 
 void Platform_Init(const char *title, int width, int height)
 {
+	g_cfg_swapInterval = 1;
 	PsyX_Initialise(title, width, height, 0);
 }
 
@@ -193,6 +195,8 @@ void Platform_BeginFrame(void)
 	PsyX_BeginScene();
 }
 
+// NOTE(aalhendi): Frame timing is handled by VSync() in the platform layer,
+// matching PS1 hardware behavior. Platform_EndFrame only does buffer swap + FPS.
 void Platform_EndFrame(void)
 {
 	PsyX_EndScene();
@@ -214,18 +218,33 @@ int NikoGetEnterKey(void)
 {
 	return 0;
 }
-void NikoCalcFPS(void)
-{
-	static int frameCount = 0;
-	static Uint32 lastTime = 0;
 
-	frameCount++;
+// NOTE(aalhendi): PS1 VSync emulation; game's primary frame throttle.
+static Uint32 s_nextVBlank = 0;
+
+int VSync(int mode)
+{
+	// NOTE(aalhendi): determine how many ms supposed to wait.
+	// On PS1, mode <= 0 means wait for the next single VBlank (~16ms).
+	// mode > 0 means explicitly wait for 'mode' number of VBlanks (mode * 16ms).
+	Uint32 wait_ms = (mode <= 0) ? 16 : (16 * mode);
+
 	Uint32 now = SDL_GetTicks();
 
-	if (now - lastTime >= 1000)
+	if (s_nextVBlank != 0 && now < s_nextVBlank)
 	{
-		fprintf(stderr, "[FPS] %d fps, gGT->timer=%d, vsyncTillFlip=%d\n", frameCount * 1000 / (now - lastTime), (int)sdata->gGT->timer, sdata->vsyncTillFlip);
-		frameCount = 0;
-		lastTime = now;
+		SDL_Delay(s_nextVBlank - now);
+		now = SDL_GetTicks();
 	}
+
+#ifdef CTR_INTERNAL
+	const Uint32 OVERRUN_THRESHOLD_MS = 8;
+	if (s_nextVBlank != 0 && now > s_nextVBlank + OVERRUN_THRESHOLD_MS)
+	{
+		fprintf(stderr, "[CTR] VSync overrun by %d ms\n", now - s_nextVBlank);
+	}
+#endif
+
+	s_nextVBlank = now + wait_ms;
+	return (int)(now & 0x7FFF);
 }

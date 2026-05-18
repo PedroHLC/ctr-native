@@ -535,13 +535,11 @@ u_int DECOMP_main()
 
 
 #ifdef REBUILD_PC
-			PsyX_BeginScene();
+			Platform_BeginFrame();
 #endif
 			DECOMP_MainFrame_RenderFrame(gGT, gGS);
 #ifdef REBUILD_PC
-			PsyX_EndScene();
-			void NikoCalcFPS();
-			NikoCalcFPS();
+			Platform_EndFrame();
 #endif
 
 
