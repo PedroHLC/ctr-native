@@ -1,5 +1,21 @@
 #include <common.h>
 
+#ifdef CTR_INTERNAL
+// NOTE(aalhendi): Internal GDB input shim for runtime probes.
+// gCtrDebugPadTap is one-frame input; gCtrDebugPadHeld stays pressed until reset.
+// Example route, main menu -> Time Trial:
+//   # Select Adventure/Time Trial row from main menu, then confirm each menu.
+//   set D230.menuMainMenu.rowSelected=1
+//   set gCtrDebugPadTap=0x10
+//   continue
+//   set gCtrDebugPadTap=0x10
+//   continue
+//   set gCtrDebugPadTap=0x10
+//   continue
+volatile int gCtrDebugPadHeld = 0;
+volatile int gCtrDebugPadTap = 0;
+#endif
+
 /// @brief Main gamepad processing function. Polls every connected gamepad and generates global state flags.
 /// @param gGamepads - gamepad input system
 void DECOMP_GAMEPAD_ProcessAnyoneVars(struct GamepadSystem *gGamepads)
@@ -31,4 +47,25 @@ void DECOMP_GAMEPAD_ProcessAnyoneVars(struct GamepadSystem *gGamepads)
 		gGamepads->anyoneReleased |= pad->buttonsReleased;
 		gGamepads->anyoneHeldPrev |= pad->buttonsHeldPrevFrame;
 	}
+
+#ifdef CTR_INTERNAL
+	if (gGamepads->numGamepadsConnected > 0)
+	{
+		pad = &gGamepads->gamepad[0];
+
+		if (gCtrDebugPadHeld != 0)
+		{
+			pad->buttonsHeldCurrFrame |= gCtrDebugPadHeld;
+			gGamepads->anyoneHeldCurr |= gCtrDebugPadHeld;
+		}
+
+		if (gCtrDebugPadTap != 0)
+		{
+			pad->buttonsTapped |= gCtrDebugPadTap;
+			gGamepads->anyoneTapped |= gCtrDebugPadTap;
+			gGamepads->anyoneHeldCurr |= gCtrDebugPadTap;
+			gCtrDebugPadTap = 0;
+		}
+	}
+#endif
 }
