@@ -847,7 +847,6 @@ void DECOMP_DebugFont_Init(struct GameTracker *gGT);
 void DECOMP_RB_Bubbles_RoosTubes(void);
 int DECOMP_LOAD_IsOpen_Podiums(void);
 void DECOMP_RB_Spider_DrawWebs(struct Thread *t, struct PushBuffer *pb);
-void DECOMP_RB_Follower_ProcessBucket(struct Thread *t);
 int DECOMP_LOAD_IsOpen_MainMenu(void);
 int DECOMP_Particle_BitwiseClampByte(int *value);
 void DECOMP_PROC_DestroyBloodline(struct Thread *t);

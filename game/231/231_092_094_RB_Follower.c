@@ -1,6 +1,12 @@
 #include <common.h>
 
-void DECOMP_RB_Follower_ProcessBucket(struct Thread *t)
+static struct InstDrawPerPlayer *RB_Follower_GetIDPP(struct Instance *inst, int playerIndex)
+{
+	return (struct InstDrawPerPlayer *)((char *)inst + sizeof(struct Instance) + (playerIndex * sizeof(struct InstDrawPerPlayer)));
+}
+
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x800b6d58-0x800b6e10
+void RB_Follower_ProcessBucket(struct Thread *t)
 {
 	int i;
 	int numPlyr;
@@ -22,17 +28,17 @@ void DECOMP_RB_Follower_ProcessBucket(struct Thread *t)
 		driverID = fObj->driver->driverID;
 
 		inst = t->inst;
-		idpp = INST_GETIDPP(inst);
+		idpp = RB_Follower_GetIDPP(inst, 0);
 
 		// make Follower invisible to all other players
 		for (i = 0; i < numPlyr; i++)
 			if (i != driverID)
-				idpp[i].instFlags &= ~(0x40);
+				idpp[i].instFlags &= ~DRAW_SUCCESSFUL;
 
 		// make Mine invisible to this player
 		inst = fObj->mineTh->inst;
-		idpp = INST_GETIDPP(inst);
-		idpp[driverID].instFlags &= ~(0x40);
+		idpp = RB_Follower_GetIDPP(inst, driverID);
+		idpp->instFlags &= ~DRAW_SUCCESSFUL;
 	}
 }
 

@@ -774,9 +774,8 @@ void RenderAllFlag0x40(struct GameTracker *gGT)
 		RB_Blowup_ProcessBucket(gGT->threadBuckets[BLOWUP].thread);
 
 		DECOMP_RB_Spider_DrawWebs(gGT->threadBuckets[SPIDER].thread, &gGT->pushBuffer[0]);
-		DECOMP_RB_Follower_ProcessBucket(gGT->threadBuckets[FOLLOWER].thread);
-
-		// skipping RB_StartText_ProcessBucket, it's empty in 231
+		RB_Follower_ProcessBucket(gGT->threadBuckets[FOLLOWER].thread);
+		RB_StartText_ProcessBucket(gGT->threadBuckets[STARTTEXT].thread);
 	}
 
 	if (DECOMP_LOAD_IsOpen_AdvHub() != 0)
