@@ -22,19 +22,19 @@ void *PlayerCrashingFuncTable[13] = {
     DECOMP_VehPhysProc_SlamWall_Animate,
     VehEmitter_DriverMain,
 #else
-// TODO(aalhendi): Port driver collision, jump/friction,
-// matrix translation, slam-wall animation, and emitter stages.
+// TODO(aalhendi): Port slam-wall animation stage.
 #ifdef CTR_NATIVE
     COLL_MOVED_PlayerSearch,
+    VehPhysForce_CollideDrivers,
 #else
     NULL,
+    NULL,
 #endif
-    NULL,
     COLL_FIXED_PlayerSearch,
+    VehPhysGeneral_JumpAndFriction,
+    VehPhysForce_TranslateMatrix,
     NULL,
-    NULL,
-    NULL,
-    NULL,
+    VehEmitter_DriverMain,
 #endif
 };
 

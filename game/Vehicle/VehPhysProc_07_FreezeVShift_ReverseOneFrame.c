@@ -3,7 +3,7 @@
 void DECOMP_VehPhysProc_FreezeVShift_ReverseOneFrame(struct Thread *t, struct Driver *d)
 {
 #ifndef REBUILD_PS1
-	VehPhysGeneral_JumpAndFriction();
+	VehPhysGeneral_JumpAndFriction(t, d);
 #endif
 
 	int actionFlagSet = d->actionsFlagSet;

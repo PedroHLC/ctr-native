@@ -1,6 +1,7 @@
 #include <common.h>
 
-struct Particle *DECOMP_VehEmitter_Exhaust(struct Driver *d, VECTOR *param_2, VECTOR *param_3)
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x80059100-0x80059344
+struct Particle *VehEmitter_Exhaust(struct Driver *d, VECTOR *param_2, VECTOR *param_3)
 {
 	int exhaustType;
 
@@ -89,4 +90,9 @@ struct Particle *DECOMP_VehEmitter_Exhaust(struct Driver *d, VECTOR *param_2, VE
 	p->flagsSetColor |= 0x40;
 
 	return p;
+}
+
+struct Particle *DECOMP_VehEmitter_Exhaust(struct Driver *d, VECTOR *param_2, VECTOR *param_3)
+{
+	return VehEmitter_Exhaust(d, param_2, param_3);
 }

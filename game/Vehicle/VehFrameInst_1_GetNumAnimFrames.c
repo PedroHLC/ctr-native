@@ -1,6 +1,7 @@
 #include <common.h>
 
-u32 DECOMP_VehFrameInst_GetNumAnimFrames(struct Instance *inst, int animIndex)
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x8005b0f4-0x8005b178
+u32 VehFrameInst_GetNumAnimFrames(struct Instance *inst, int animIndex)
 {
 	if (inst->model == NULL)
 		return 0;
@@ -22,4 +23,9 @@ u32 DECOMP_VehFrameInst_GetNumAnimFrames(struct Instance *inst, int animIndex)
 		return 0;
 
 	return anim->numFrames & 0x7fff;
+}
+
+u32 DECOMP_VehFrameInst_GetNumAnimFrames(struct Instance *inst, int animIndex)
+{
+	return VehFrameInst_GetNumAnimFrames(inst, animIndex);
 }

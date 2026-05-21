@@ -1,6 +1,7 @@
 #include <common.h>
 
-int DECOMP_VehFrameInst_GetStartFrame(int animIndex, int numFrames)
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x8005b0c4-0x8005b0f4
+int VehFrameInst_GetStartFrame(int animIndex, int numFrames)
 {
 	switch (animIndex)
 	{
@@ -16,4 +17,9 @@ int DECOMP_VehFrameInst_GetStartFrame(int animIndex, int numFrames)
 	default:
 		return 0;
 	}
+}
+
+int DECOMP_VehFrameInst_GetStartFrame(int animIndex, int numFrames)
+{
+	return VehFrameInst_GetStartFrame(animIndex, numFrames);
 }

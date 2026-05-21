@@ -1,9 +1,7 @@
 #include <common.h>
 
-// causes bug:
-// https://discord.com/channels/527135227546435584/527136553957589005/1349544147916292106
-
-void DECOMP_VehPhysForce_ConvertSpeedToVec(struct Driver *driver)
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x8005e104-0x8005e214
+void VehPhysForce_ConvertSpeedToVec(struct Driver *driver, Vec3 *vel)
 {
 	int yAngle = driver->axisRotationY;
 	int ySine = DECOMP_MATH_Sin(yAngle);
@@ -14,7 +12,12 @@ void DECOMP_VehPhysForce_ConvertSpeedToVec(struct Driver *driver)
 	int xCos = DECOMP_MATH_Cos(xAngle);
 	int xSine = DECOMP_MATH_Sin(xAngle);
 
-	driver->velocity.x = FP_MULT(yComponent, xSine);
-	driver->velocity.y = FP_MULT(driver->speed, ySine);
-	driver->velocity.z = FP_MULT(yComponent, xCos);
+	vel->x = FP_MULT(yComponent, xSine);
+	vel->y = FP_MULT(driver->speed, ySine);
+	vel->z = FP_MULT(yComponent, xCos);
+}
+
+void DECOMP_VehPhysForce_ConvertSpeedToVec(struct Driver *driver)
+{
+	VehPhysForce_ConvertSpeedToVec(driver, &driver->velocity);
 }

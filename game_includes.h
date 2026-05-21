@@ -72,6 +72,8 @@
 #undef CAM_FollowDriver_Normal
 #undef CAM_FollowDriver_AngleAxis
 
+#include "game/BOTS/BOTS_13_CollideWithOtherAI.c"
+
 #include "game/CDSYS/CDSYS_00_Init.c"
 #include "game/CDSYS/CDSYS_01_GetFilePosInt.c"
 #include "game/CDSYS/CDSYS_02_SetMode_StreamData.c"
@@ -201,6 +203,7 @@
 #include "game/HOWL/h07_OtherFX_Stop2.c"
 #include "game/HOWL/h122_OtherFX_RecycleNew.c"
 #include "game/HOWL/h123_OtherFX_RecycleMute.c"
+#include "game/HOWL/h124_OtherFX_DriverCrashing.c"
 #include "game/HOWL/h08_EngineAudio_InitOnce.c"
 #include "game/HOWL/h09_EngineAudio_Recalculate.c"
 #include "game/HOWL/h10_EngineAudio_Stop.c"
@@ -552,14 +555,31 @@
 #include "game/Vehicle/VehAfterColl_0_GetSurface.c"
 #include "game/Vehicle/VehAfterColl_1_GetTerrain.c"
 
+#include "game/Vehicle/VehEmitter_0_Exhaust.c"
+#include "game/Vehicle/VehEmitter_1_Sparks_Ground.c"
+#include "game/Vehicle/VehEmitter_2_Terrain_Ground.c"
+#include "game/Vehicle/VehEmitter_3_Sparks_Wall.c"
+#include "game/Vehicle/VehEmitter_4_DriverMain.c"
+
 #include "game/Vehicle/VehFire_0_Audio.c"
 #include "game/Vehicle/VehFire_1_Increment.c"
 
 #include "game/Vehicle/VehFrameInst_0_GetStartFrame.c"
 #include "game/Vehicle/VehFrameInst_1_GetNumAnimFrames.c"
+#include "game/Vehicle/VehFrameProc_2_Driving.c"
+#include "game/Vehicle/VehFrameProc_3_Spinning.c"
+#include "game/Vehicle/VehFrameProc_4_LastSpin.c"
+
+#include "game/Vehicle/VehPhysCrash_0_ConvertVecToSpeed.c"
+#include "game/Vehicle/VehPhysCrash_1_BounceSelf.c"
+#include "game/Vehicle/VehPhysCrash_2_AI.c"
+#include "game/Vehicle/VehPhysCrash_3_Attack.c"
+#include "game/Vehicle/VehPhysCrash_4_AnyTwoCars.c"
 
 #include "game/Vehicle/VehPhysForce_0_ConvertSpeedToVec.c"
 #include "game/Vehicle/VehPhysForce_2_OnApplyForces.c"
+#include "game/Vehicle/VehPhysForce_3_CollideDrivers.c"
+#include "game/Vehicle/VehPhysForce_4_TranslateMatrix.c"
 #include "game/Vehicle/VehPhysForce_5_RotAxisAngle.c"
 #include "game/Vehicle/VehGroundShadow_0_Subset1.c"
 #include "game/Vehicle/VehGroundShadow_1_Main.c"
@@ -567,6 +587,8 @@
 #include "game/Vehicle/VehPhysGeneral_0_PhysAngular.c"
 #include "game/Vehicle/VehPhysGeneral_1_LerpQuarterStrength.c"
 #include "game/Vehicle/VehPhysGeneral_2_LerpToForwards.c"
+#include "game/Vehicle/VehPhysGeneral_3_JumpGetVelY.c"
+#include "game/Vehicle/VehPhysGeneral_4_JumpAndFriction.c"
 #include "game/Vehicle/VehPhysGeneral_5_SetHeldItem.c"
 #include "game/Vehicle/VehPhysGeneral_6_GetBaseSpeed.c"
 

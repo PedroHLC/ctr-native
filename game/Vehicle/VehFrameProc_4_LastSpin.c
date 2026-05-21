@@ -1,52 +1,43 @@
 #include <common.h>
 
-void DECOMP_VehFrameProc_LastSpin(struct Thread *t, struct Driver *d)
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x8005b5fc-0x8005b6b8
+void VehFrameProc_LastSpin(struct Thread *t, struct Driver *d)
 {
-	s16 sVar1;
-	u16 interp;
+	struct Instance *inst = t->inst;
+	int targetFrame;
 	int numFrames;
-	int startFrame;
-	struct Instance *inst;
 
-	// get instance from thread
-	inst = t->inst;
-
-	// if animType is just driving
-	if (inst->animIndex == 0)
+	if (inst->animIndex != 0)
 	{
-		// get number of frames in animation
-		// numFrames = VehFrameInst_GetNumAnimFrames(inst, 0);
-		numFrames = 20 + 1;
-
-		// if numFrames not zero
-		if (numFrames != 0)
-		{
-			sVar1 = d->turnAngleCurr;
-
-			// get animation frame
-			startFrame = inst->animFrame;
-
-			if (0 < sVar1)
-			{
-				if (d->unk_LerpToForwards < 0)
-				{
-					// last frame
-					startFrame = numFrames - 1;
-				}
-			}
-			else if (0 < d->unk_LerpToForwards)
-			{
-				// start from beginning
-				startFrame = 0;
-			}
-
-			// Interpolate animation frame by speed
-			interp = VehCalc_InterpBySpeed(inst->animFrame, 3, startFrame);
-
-			// set animation frame
-			inst->animFrame = interp;
-		}
+		VehFrameProc_Spinning(t, d);
 		return;
 	}
-	DECOMP_VehFrameProc_Spinning(t, d);
+
+	numFrames = DECOMP_VehFrameInst_GetNumAnimFrames(inst, 0);
+	if (numFrames <= 0)
+	{
+		return;
+	}
+
+	targetFrame = inst->animFrame;
+
+	if (d->turnAngleCurr > 0)
+	{
+		if (d->unk_LerpToForwards < 0)
+		{
+			targetFrame = numFrames - 1;
+		}
+	}
+
+	if ((d->turnAngleCurr < 0) && (d->unk_LerpToForwards > 0))
+	{
+		targetFrame = 0;
+	}
+
+	inst->animFrame = DECOMP_VehCalc_InterpBySpeed(inst->animFrame, 3, targetFrame);
+}
+
+void DECOMP_VehFrameProc_LastSpin(struct Thread *t, struct Driver *d)
+{
+	VehFrameProc_LastSpin(t, d);
 }

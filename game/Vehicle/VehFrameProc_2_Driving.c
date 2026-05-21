@@ -1,195 +1,172 @@
 #include <common.h>
 
-void DECOMP_VehFrameProc_Driving(struct Thread *t, struct Driver *d)
+static void VehFrameProc_Driving_SpawnBurnSmoke(struct Driver *d)
 {
-	int iVar7;
-	int iVar9;
-	u16 interp;
-	int numFrames;
-	int startFrame;
-	char currAnimIndex;
-	char currFrame;
+	struct Particle *p = Particle_Init(0, sdata->gGT->iconGroup[1], &data.emSet_BurnSmoke[0]);
 
-	u8 animType = 0;
-	struct GameTracker *gGT = sdata->gGT;
+	if (p != NULL)
+	{
+		p->unk18 = d->instSelf->unk50;
+		p->driverInst = d->instSelf;
+		p->unk19 = d->driverID;
+	}
+}
+
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x8005b178-0x8005b510
+void VehFrameProc_Driving(struct Thread *t, struct Driver *d)
+{
 	struct Instance *inst = t->inst;
+	u8 desiredAnim = 0;
+	int numFrames;
 
-	if ((d->instTntRecv == 0) && (d->kartState != KS_WARP_PAD))
+	if ((d->instTntRecv == NULL) && (d->kartState != KS_WARP_PAD))
 	{
 		if (d->fireSpeed < 0)
 		{
-			// check if you are driving backwards
-			// (0) forwards
-			// (1) backwards
-			animType = (d->baseSpeed < 1);
+			desiredAnim = d->speedApprox < 1;
 		}
-		// if player height is far from quadblock height
-		if ((0x600 < d->jumpHeightCurr || inst->animIndex == 3) && (0x8000 < d->posCurr.y - d->quadBlockHeight))
+
+		if (((d->jumpHeightCurr > 0x600) || (inst->animIndex == 3)) && (d->posCurr.y - d->quadBlockHeight > 0x8000))
 		{
-			// jumping animation
-			animType = 3;
+			desiredAnim = 3;
 		}
 	}
 
-	currAnimIndex = inst->animIndex;
-
-	numFrames = VehFrameInst_GetNumAnimFrames(inst, currAnimIndex);
-
+	numFrames = DECOMP_VehFrameInst_GetNumAnimFrames(inst, inst->animIndex);
 	if (numFrames <= 0)
-		return;
-
-	// if animation changes
-	if (animType != currAnimIndex)
 	{
-		// crashing
-		if (currAnimIndex == 2)
+		return;
+	}
+
+	if (desiredAnim != inst->animIndex)
+	{
+		u8 currAnim = inst->animIndex;
+		int startFrame;
+
+		if (currAnim == 2)
 		{
-			// start on the last frame
-			startFrame = VehFrameInst_GetNumAnimFrames(inst, 2) - 1;
+			startFrame = DECOMP_VehFrameInst_GetNumAnimFrames(inst, 2) - 1;
 		}
 		else
 		{
-			// starting frame
-			startFrame = VehFrameInst_GetStartFrame(currAnimIndex, numFrames);
+			startFrame = DECOMP_VehFrameInst_GetStartFrame(currAnim, numFrames);
 		}
 
-		// frame not aligned
-		if (inst->animFrame != startFrame)
+		if (inst->animFrame == startFrame)
 		{
-			u32 animSpeed = 2;
-			// if steering
-			if (currAnimIndex == 0)
+			numFrames = DECOMP_VehFrameInst_GetNumAnimFrames(inst, desiredAnim);
+			if (numFrames <= 0)
 			{
-				animSpeed = 6;
-			}
-			// crashing
-			else if (currAnimIndex == 2)
-			{
-				animSpeed = 1;
-
-				d->matrixIndex = *(char *)&inst->animFrame;
-			}
-
-			// curr frame, animation moving speed per frame, starting frame
-			interp = VehCalc_InterpBySpeed(inst->animFrame, animSpeed, startFrame);
-			inst->animFrame = (s16)interp;
-
-			if ((u32)(currAnimIndex - 2) > 1)
 				return;
+			}
 
-			// kart animation frame
-			currFrame = *(char *)&inst->animFrame;
-			d->matrixIndex = currFrame;
+			inst->animIndex = desiredAnim;
+			inst->animFrame = DECOMP_VehFrameInst_GetStartFrame(desiredAnim, numFrames);
+			d->matrixArray = 0;
+			d->matrixIndex = 0;
+		}
+		else
+		{
+			int speed = 2;
 
-			// kart animation Index
-			if (currFrame == 0)
-				d->matrixArray = 0;
+			if (currAnim == 0)
+			{
+				speed = 6;
+			}
+			else if (currAnim == 2)
+			{
+				speed = 1;
+				d->matrixIndex = inst->animFrame;
+			}
+
+			inst->animFrame = DECOMP_VehCalc_InterpBySpeed(inst->animFrame, speed, startFrame);
+
+			if ((u32)(inst->animIndex - 2) < 2)
+			{
+				d->matrixIndex = (u8)inst->animFrame;
+				if (d->matrixIndex == 0)
+				{
+					d->matrixArray = 0;
+					d->matrixIndex = 0;
+				}
+			}
 
 			return;
 		}
-
-		numFrames = VehFrameInst_GetNumAnimFrames(inst, animType);
-
-		if (numFrames <= 0)
-			return;
-
-		// set animation
-		inst->animIndex = (char)animType;
-		// starting frame
-		inst->animFrame = VehFrameInst_GetStartFrame(animType, numFrames);
-		// init kart anim
-		d->matrixArray = 0;
-		d->matrixIndex = 0;
 	}
 
-	// just steering
-	if (animType == 0)
+	if (desiredAnim == 0)
 	{
-		// half number of frames
-		iVar9 = numFrames >> 1;
-		// if you don't have a TNT over you
-		if (d->instTntRecv == 0)
+		int targetFrame = numFrames >> 1;
+
+		if (d->instTntRecv == NULL)
 		{
 			s16 burnTimer = d->burnTimer;
-			// not currently burned or just start burning
-			if ((burnTimer == 0) || (479 < burnTimer))
-			{
-				// negative turning stat while braking
-				iVar9 = -0x40;
-				// if you're not in accel prevention
-				if ((d->actionsFlagSet & 8) == 0)
-				{
-					iVar7 = d->simpTurnState;
 
-					// negative character's turn stat
-					animType = d->const_TurnRate;
-					iVar9 = -animType;
-				}
-				else
-				{
-					// positive turning stat while braking
-					animType = 0x40;
-					iVar7 = d->ampTurnState;
-				}
-				// seems like iVar9 gets set to 0 if you're turning, or to last frame index if you're not
-				iVar9 = DECOMP_VehCalc_MapToRange(-(iVar7), iVar9, animType, 0, (numFrames - 1));
+			if ((burnTimer != 0) && (burnTimer < 0x1e0))
+			{
+				targetFrame += (((burnTimer >> 5) % 5) << 2) - 8;
+				inst->animFrame = targetFrame;
+				VehFrameProc_Driving_SpawnBurnSmoke(d);
 			}
 			else
 			{
-				iVar9 = (((burnTimer >> 5) % 5) >> 2) - 8 + iVar9;
+				int turnMin = -0x40;
+				int turnMax = 0x40;
+				int turnState = d->ampTurnState;
 
-				inst->animFrame = (s16)iVar9;
-				struct Particle *p = Particle_Init(0, gGT->iconGroup[1], &data.emSet_BurnSmoke[0]);
-				if (p != NULL)
+				if ((d->actionsFlagSet & 8) == 0)
 				{
-					p->unk18 = d->instSelf->unk50;
-					p->driverInst = d->instSelf;
-					p->unk19 = d->driverID;
+					turnMax = (u8)d->const_TurnRate;
+					turnMin = -turnMax;
+					turnState = d->simpTurnState;
 				}
+
+				targetFrame = DECOMP_VehCalc_MapToRange(-turnState, turnMin, turnMax, 0, numFrames - 1);
 			}
 		}
+
+		inst->animFrame = DECOMP_VehCalc_InterpBySpeed(inst->animFrame, 1, targetFrame);
+		return;
 	}
-	else
+
+	if (desiredAnim == 3)
 	{
-		// jump animation
-		if (animType == 3)
+		s16 characterID;
+		u8 matrixArray;
+
+		inst->animFrame = DECOMP_VehCalc_InterpBySpeed(inst->animFrame, 1, numFrames - 1);
+
+		if (d->kartState == KS_MASK_GRABBED)
 		{
-			interp = VehCalc_InterpBySpeed(inst->animFrame, 1, numFrames - 1);
-			inst->animFrame = interp;
-
-			if (d->kartState == KS_MASK_GRABBED)
-				return;
-
-			char charID = data.characterIDs[d->driverID];
-
-			// for human reading purposes
-			u8 animType;
-
-			switch (charID)
-			{
-			// if this is Penta
-			case 13:
-				animType = 10; // Use Coco's
-				break;
-			// if this is Fake Crash or Oxide
-			case 14:
-			case 15:
-				animType = 7; // Use Crash's
-				break;
-			default:
-				animType = charID + 7;
-			}
-
-			// set AnimType based on charID
-			d->matrixArray = animType;
-
-			d->matrixIndex = *(char *)&inst->animFrame;
-
 			return;
 		}
-		// last frame
-		iVar9 = numFrames - 1;
+
+		characterID = data.characterIDs[d->driverID];
+		if (characterID == PENTA_PENGUIN)
+		{
+			characterID = COCO_BANDICOOT;
+		}
+		if (characterID == FAKE_CRASH)
+		{
+			characterID = CRASH_BANDICOOT;
+		}
+
+		matrixArray = characterID + 7;
+		if (characterID == NITROS_OXIDE)
+		{
+			matrixArray = 7;
+		}
+
+		d->matrixArray = matrixArray;
+		d->matrixIndex = (u8)inst->animFrame;
+		return;
 	}
-	interp = VehCalc_InterpBySpeed(inst->animFrame, 1, iVar9);
-	inst->animFrame = interp;
+
+	inst->animFrame = DECOMP_VehCalc_InterpBySpeed(inst->animFrame, 1, numFrames - 1);
+}
+
+void DECOMP_VehFrameProc_Driving(struct Thread *t, struct Driver *d)
+{
+	VehFrameProc_Driving(t, d);
 }

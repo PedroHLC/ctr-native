@@ -1,29 +1,24 @@
 #include <common.h>
 
-// over budget 664/664
-
-// s16 frontTireLeftIN[4] = {-0x2200, 0xa00, 0x2800, 0};
-// s16 frontTireRightIN[4] = {0x2200, 0xa00, 0x2800, 0};
-// s16 backTireLeftIN[4] = {-0x2200, 0xa00, -0x1400, 0};
-// s16 backTireRightIN[4] = {0x2200, 0xa00, -0x1400, 0};
-
-void DECOMP_VehEmitter_Sparks_Wall(struct Driver *d, struct ParticleEmitter *emSet)
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x80059780-0x80059a18
+void VehEmitter_Sparks_Wall(struct Driver *d, struct ParticleEmitter *emSet)
 {
 	int speedAbs = d->speedApprox;
 	if (speedAbs < 0)
 		speedAbs = -speedAbs;
 
 	// must have speed, or gas pedal, for vibration
-
-	if ((d->fireSpeed != 0) || (speedAbs > 0x200))
+	if (((d->fireSpeed != 0) || (speedAbs > 0x200)) && (d->frameAgainstWall < 450))
 	{
 		// both gamepad vibration
-		GAMEPAD_ShockFreq(d, 8, 0);
-		GAMEPAD_ShockForce1(d, 8, 0x7f);
+		DECOMP_GAMEPAD_ShockFreq(d, 8, 0);
+		DECOMP_GAMEPAD_ShockForce1(d, 8, 0x7f);
 
 		d->frameAgainstWall++;
-		if (d->frameAgainstWall == 450)
-			d->frameAgainstWall = 0;
+	}
+	else
+	{
+		d->frameAgainstWall = 0;
 	}
 
 	// must reach minimum speed for sparks
@@ -36,7 +31,7 @@ void DECOMP_VehEmitter_Sparks_Wall(struct Driver *d, struct ParticleEmitter *emS
 	if (p == NULL)
 		return;
 
-	s16 *matrix = (s16 *)0x1f800000;
+	s16 *matrix = CTR_SCRATCHPAD_ADDR_PTR(s16, CTR_SCRATCHPAD_ADDR);
 	int *TireLeftOutS32 = (int *)&matrix[0];
 	int *TireRightOutS32 = (int *)&matrix[6];
 	s16 *TireLeftOutS16 = &matrix[0];
@@ -102,8 +97,7 @@ void DECOMP_VehEmitter_Sparks_Wall(struct Driver *d, struct ParticleEmitter *emS
 
 	gte_ldv0(&distIn4[0]);
 	gte_llv0();
-	gte_stlvnl0(&distOut4[0]);
-	gte_stlvnl1(&distOut4[1]);
+	gte_stlvnl(&distOut4[0]);
 	if (distOut4[0] < distOut4[1])
 	{
 		TireLeftOutS16 = TireRightOutS16;
@@ -125,4 +119,9 @@ void DECOMP_VehEmitter_Sparks_Wall(struct Driver *d, struct ParticleEmitter *emS
 	p->axis[2].velocity = (s16)distOut4[2];
 
 	p->driverInst = d->instSelf;
+}
+
+void DECOMP_VehEmitter_Sparks_Wall(struct Driver *d, struct ParticleEmitter *emSet)
+{
+	VehEmitter_Sparks_Wall(d, emSet);
 }

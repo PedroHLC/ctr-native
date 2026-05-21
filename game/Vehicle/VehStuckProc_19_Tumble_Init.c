@@ -20,19 +20,19 @@ void *PlayerBlastedFuncTable[0xD] = {(void *)0x0,
                                      DECOMP_VehStuckProc_Tumble_Animate,
                                      VehEmitter_DriverMain
 #else
-// TODO(aalhendi): Port driver collision, jump/friction,
-// matrix translation, tumble animation, and emitter stages.
+// TODO(aalhendi): Port tumble animation stage.
 #ifdef CTR_NATIVE
                                      COLL_MOVED_PlayerSearch,
+                                     VehPhysForce_CollideDrivers,
 #else
                                      NULL,
+                                     NULL,
 #endif
-                                     NULL,
                                      COLL_FIXED_PlayerSearch,
+                                     VehPhysGeneral_JumpAndFriction,
+                                     VehPhysForce_TranslateMatrix,
                                      NULL,
-                                     NULL,
-                                     NULL,
-                                     NULL
+                                     VehEmitter_DriverMain
 #endif
 };
 

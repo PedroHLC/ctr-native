@@ -1,6 +1,7 @@
 #include <common.h>
 
-void DECOMP_BOTS_CollideWithOtherAI(struct Driver *robot_1, struct Driver *robot_2)
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x80016ec8-0x8001702c
+void BOTS_CollideWithOtherAI(struct Driver *robot_1, struct Driver *robot_2)
 {
 	struct NavFrame *nfCurr;
 	struct NavFrame *nfNext;
@@ -54,7 +55,7 @@ void DECOMP_BOTS_CollideWithOtherAI(struct Driver *robot_1, struct Driver *robot
 	pos[2] = (s16)(robot_1->posCurr.z >> 8);
 
 	// two navFrame structs, and position pointer
-	int res1 = CAM_MapRange_PosPoints(uVar3, estimatePos, &pos[0]);
+	int res1 = DECOMP_CAM_MapRange_PosPoints(uVar3, estimatePos, &pos[0]);
 
 	// position of other driver
 	pos[0] = (s16)(robot_2->posCurr.x >> 8);
@@ -62,21 +63,24 @@ void DECOMP_BOTS_CollideWithOtherAI(struct Driver *robot_1, struct Driver *robot
 	pos[2] = (s16)(robot_2->posCurr.z >> 8);
 
 	// two navFrame structs, and position pointer
-	int res2 = CAM_MapRange_PosPoints(uVar3, estimatePos, &pos[0]);
+	int res2 = DECOMP_CAM_MapRange_PosPoints(uVar3, estimatePos, &pos[0]);
 
 	// reduce speed of one AI,
 	// the AI that is closer to the previous nav point,
 	// who therefore is the driver in the back of the collision
 
-	struct Driver *d;
-	d = robot_2;
 	if (res1 < res2)
 	{
-		d = robot_1;
-	}
+		int speed = robot_2->botData.unk5bc.ai_speedLinear - 3000;
+		speed = ((speed < 0) ? 0 : speed); // clamp to 0
 
-	// reduce AI speed
-	int speed = robot_1->botData.unk5bc.ai_speedLinear - 3000;
-	speed = ((speed < 0) ? 0 : speed); // clamp to 0
-	robot_1->botData.unk5bc.ai_speedLinear = speed;
+		robot_1->botData.unk5bc.ai_speedLinear = speed;
+	}
+	else
+	{
+		int speed = robot_1->botData.unk5bc.ai_speedLinear - 3000;
+		speed = ((speed < 0) ? 0 : speed); // clamp to 0
+
+		robot_2->botData.unk5bc.ai_speedLinear = speed;
+	}
 }

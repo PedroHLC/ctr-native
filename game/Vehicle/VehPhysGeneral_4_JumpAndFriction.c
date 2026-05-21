@@ -1,469 +1,354 @@
 #include <common.h>
 
-#define gte_ldVXY0(r0) __asm__ volatile("mtc2   %0, $0" : : "r"(r0))
-#define gte_ldVZ0(r0)  __asm__ volatile("mtc2   %0, $1" : : "r"(r0))
-#define read_mt(r0, r1, r2)            \
-	__asm__ volatile("mfc2   %0, $25;" \
-	                 "mfc2   %1, $26;" \
-	                 "mfc2   %2, $27;" \
-	                 :                 \
-	                 : "r"(r0), "r"(r1), "r"(r2))
-
-void DECOMP_VehPhysGeneral_JumpAndFriction(struct Thread *t, struct Driver *d)
+static int VehPhysGeneral_Jump_Abs(int value)
 {
-	char uVar1;
-	bool bVar2;
-	s16 sVar3;
-	int iVar4;
-	int iVar5;
-	int iVar6;
-	s16 sVar7;
-	int iVar8;
-	int iVar9;
-	u32 uVar10;
-	u32 uVar11;
-	u32 uVar12;
-	int iVar13;
-	u32 uVar14;
-	int param_1;
-	int param_2;
-	int param_3;
-	VECTOR movement;
-	int jumpForce;
+	return value < 0 ? -value : value;
+}
 
-	uVar12 = d;
-	gte_SetRotMatrix(&d->matrixMovingDir);
+static int VehPhysGeneral_Jump_Div2TowardZero(int value)
+{
+	return (value + ((u32)value >> 31)) >> 1;
+}
+
+static int VehPhysGeneral_Jump_Div4TowardZero(int value)
+{
+	if (value < 0)
+	{
+		value += 3;
+	}
+
+	return value >> 2;
+}
+
+// NOTE(aalhendi): Native expression of retail gte_rtv0; retail reads MAC1-MAC3
+// after rotating V0 by matrixMovingDir.
+static Vec3 VehPhysGeneral_Jump_RotateVector(const MATRIX *m, s16 vx, s16 vy, s16 vz)
+{
+	Vec3 out;
+
+	out.x = ((int)m->m[0][0] * vx + (int)m->m[0][1] * vy + (int)m->m[0][2] * vz) >> 12;
+	out.y = ((int)m->m[1][0] * vx + (int)m->m[1][1] * vy + (int)m->m[1][2] * vz) >> 12;
+	out.z = ((int)m->m[2][0] * vx + (int)m->m[2][1] * vy + (int)m->m[2][2] * vz) >> 12;
+
+	return out;
+}
+
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x80060630-0x80060f0c
+void VehPhysGeneral_JumpAndFriction(struct Thread *t, struct Driver *d)
+{
+	(void)t;
 
 	if ((d->kartState != KS_DRIFTING) && ((d->actionsFlagSet & 0x800000) == 0) && (d->reserves == 0))
 	{
-		s16 ampTurnState = (s16)d->ampTurnState >> 8;
-		if (ampTurnState < 0)
+		int ampTurn = (s16)d->ampTurnState >> 8;
+		if (ampTurn < 0)
 		{
-			ampTurnState = -ampTurnState;
+			ampTurn = -ampTurn;
 		}
 
-		// Part 1
-		param_1 = DECOMP_VehCalc_MapToRange(ampTurnState, 0, d->const_BackwardTurnRate, 0, d->const_TurnDecreaseRate);
-		param_3 = d->baseSpeed;
-
-		// Part 2
-		iVar9 = param_3;
-		if (param_3 < 0)
+		int turnDecrease = DECOMP_VehCalc_MapToRange(ampTurn, 0, (u8)d->const_BackwardTurnRate, 0, (int)d->const_TurnDecreaseRate);
+		int baseSpeed = d->baseSpeed;
+		int absBaseSpeed = baseSpeed;
+		if (absBaseSpeed < 0)
 		{
-			iVar9 = -param_3;
+			absBaseSpeed = -absBaseSpeed;
 		}
 
-		// Part 3
-		if (iVar9 < param_1)
+		if (absBaseSpeed < turnDecrease)
 		{
-			param_1 = iVar9;
-		}
-		sVar7 = (s16)param_1;
-
-		// Part 4
-		sVar3 = -sVar7;
-		if (param_3 < 0)
-		{
-			param_1 = -param_1;
-			sVar3 = sVar7;
+			turnDecrease = absBaseSpeed;
 		}
 
-		// Part 5
-		d->baseSpeed = d->baseSpeed + sVar3;
+		s16 speedDelta = -(s16)turnDecrease;
+		if (baseSpeed < 0)
+		{
+			speedDelta = (s16)turnDecrease;
+		}
+
+		d->baseSpeed += speedDelta;
 	}
 
 	if (d->set_0xF0_OnWallRub != 0)
 	{
-		if (d->baseSpeed > d->scrubMeta8)
+		if (d->scrubMeta8 < d->baseSpeed)
+		{
 			d->baseSpeed = d->scrubMeta8;
+		}
 
 		if (d->baseSpeed < -d->scrubMeta8)
+		{
 			d->baseSpeed = -d->scrubMeta8;
+		}
 	}
 
-	movement.vx = d->velocity.x;
-	movement.vy = d->velocity.y;
-	movement.vz = d->velocity.z;
+	Vec3 movement = d->velocity;
+	int speedLoss = 0;
 
-	uVar14 = 0;
-	iVar9 = 0;
-
-	if ((d->actionsFlagSet & 1) == 0)
+	if ((d->actionsFlagSet & ACTION_TOUCH_GROUND) == 0)
 	{
-	CHECK_FOR_ANY_JUMP:
+		goto CHECK_FOR_ANY_JUMP;
+	}
 
-// UNUSED Spring Weapon
-#if 0
-    // If you want to fire a weapon
-    if (((d->actionsFlagSet & 0x8000) != 0) &&
+	int acceleration = 0;
 
-        // If that weapon is a spring
-        (d->heldItemID == 5))
-    {      
-	  // Remove the request to fire a weapon, since we will use it now
-      d->actionsFlagSet &= ~(0x8000);
-	  
-      // if coyoteTimerMS has not expired, and cooldownMS is over
-      if ((d->jump_CoyoteTimerMS != 0) && (d->jump_CooldownMS == 0))
-	  {
-        // driver is now forced to jump
-        d->jump_ForcedMS = 0xa0;
-		
-		// const 2.25x
-        jumpForce = d->const_JumpForce * 9;
-        d->jump_InitialVelY = (s16)(jumpForce >> 2);
-		
-		// spring weapon sound
-        OtherFX_Play_Echo(9, 1, d->actionsFlagSet & 0x10000);
-		
-		d->jump_unknown = 0x180;
-        goto PROCESS_JUMP;
-      }
-      d->noItemTimer = 0;
-    }
-#endif
-
-		// if not being forced to jump (turtles), this should cause the tiny jumps on top of walls.
-		if (d->forcedJump_trampoline == 0)
+	if (((d->stepFlagSet & 3) != 0) && (d->baseSpeed > 0))
+	{
+		acceleration = 8000;
+	}
+	else if (d->baseSpeed != 0)
+	{
+		if (((d->terrainMeta1->flags & 4) == 0) || (d->baseSpeed < 1) || (d->speedApprox >= 0))
 		{
-			if (
-			    // if driver left quadblock more than 0.16s ago
-			    (d->jump_CoyoteTimerMS == 0) ||
+			int speedApprox = d->speedApprox;
+			int absSpeedApprox = VehPhysGeneral_Jump_Abs(speedApprox);
 
-			    // if haven't jumped in last 10 frames
-			    (d->jump_TenBuffer == 0) ||
-
-			    // jump_CooldownMS not over (so can't jump again)
-			    (d->jump_CooldownMS != 0))
+			if ((absSpeedApprox > 0x2ff) && ((d->baseSpeed < 1) || (speedApprox < 1)) && ((d->baseSpeed >= 0) || (speedApprox >= 0)))
 			{
-				if ((d->actionsFlagSet & 1) != 0)
-				{
-					if ((d->underDriver != 0) && (iVar9 = d->underDriver->mulNormVecY, iVar9 != 0))
-					{
-						iVar13 = (int)d->speedApprox;
-						if (iVar13 < 0)
-						{
-							iVar13 = -iVar13;
-						}
-						gte_ldVXY0((iVar9 * iVar13 >> 8) << 0x10);
-						gte_ldVZ0(0);
-						gte_rtv0();
-
-						int temp;
-						read_mt(iVar9, temp, param_3);
-						movement.vx += iVar9;
-						movement.vy += temp;
-						movement.vz += param_3;
-					}
-				}
-				goto NOT_JUMPING;
+				goto PROCESS_ACCEL;
 			}
-
-			// force driver to jump
-			d->jump_ForcedMS = 0xa0;
-
-			// increment jump counter
-			d->numberOfJumps++;
-
-			// const 1.0x
-			d->jump_InitialVelY = d->const_JumpForce;
-
-			// play jump sound
-			DECOMP_OtherFX_Play_Echo(8, 1, d->actionsFlagSet & 0x10000);
 		}
 
-		// if being forced to jump (by turtles)
-		else
+		acceleration = (int)d->const_Accel_ClassStat + (((int)d->accelConst << 5) / 5);
+
+		if ((d->stepFlagSet & 3) == 0)
 		{
-			// if first frame (basically)
-			if (
-			    // if not currently airborne from forced jump
-			    (d->jump_ForcedMS == 0) ||
-
-			    // if jump_InitialVelY was just now set to const_jump
-			    (d->jump_InitialVelY == d->const_JumpForce))
+			if ((d->reserves != 0) && (d->baseSpeed > 0))
 			{
-				DECOMP_OtherFX_Play(0x7e, 1);
+				acceleration = d->const_Accel_Reserves;
 			}
 
-			// currently forced airborne
-			d->jump_ForcedMS = 0xa0;
-
-			jumpForce = d->const_JumpForce * 3;
-
-			// if big force jump (turtles)
-			if (d->forcedJump_trampoline == 2)
+			int slowUntilSpeed = d->terrainMeta1->slowUntilSpeed;
+			if ((slowUntilSpeed != 0x100) && ((d->actionsFlagSet & 0x800000) == 0))
 			{
-				d->jump_unknown = 0x180;
-
-				// const 3.0x
-				d->jump_InitialVelY = jumpForce;
+				acceleration = (slowUntilSpeed * acceleration) >> 8;
 			}
-
-			else
-			{
-				// const 1.5x
-				d->jump_InitialVelY = jumpForce >> 1;
-			}
-
-			// remove force jump (turtles)
-			d->forcedJump_trampoline = 0;
+		}
+		else if (d->baseSpeed > 0)
+		{
+			acceleration = 8000;
 		}
 	}
 
-	// ((d->actionsFlagSet & 1) == 1)
+PROCESS_ACCEL:
+{
+	int forwardImpulse = (acceleration * sdata->gGT->elapsedTimeMS) >> 5;
+	Vec3 rotated = VehPhysGeneral_Jump_RotateVector(&d->matrixMovingDir, 0, 0, (s16)forwardImpulse);
+
+	if (d->baseSpeed < 0)
+	{
+		d->unk_offset3B2 = -(s16)forwardImpulse;
+
+		movement.x -= rotated.x;
+		movement.y -= rotated.y;
+		movement.z -= rotated.z;
+
+		d->unkVectorX = -(s16)rotated.x;
+		d->unkVectorY = -(s16)rotated.y;
+		d->unkVectorZ = -(s16)rotated.z;
+	}
 	else
 	{
-		if (((d->stepFlagSet & 3) == 0) || (d->baseSpeed < 1))
-		{
-			if (d->baseSpeed != 0)
-			{
-				if ((((d->terrainMeta1->flags & 4) == 0) || (d->baseSpeed < 1)) || (-1 < d->speedApprox))
-				{
-					iVar8 = (int)d->speedApprox;
-					iVar13 = iVar8;
-					if (iVar8 < 0)
-					{
-						iVar13 = -iVar8;
-					}
-					if (((0x2ff < iVar13) && ((d->baseSpeed < 1 || (iVar8 < 1)))) && ((-1 < d->baseSpeed || (-1 < iVar8))))
-						goto PROCESS_ACCEL;
-				}
+		d->unk_offset3B2 = (s16)forwardImpulse;
 
-				iVar9 = d->const_Accel_ClassStat + ((int)d->accelConst << 5) / 5;
+		movement.x += rotated.x;
+		movement.y += rotated.y;
+		movement.z += rotated.z;
 
-				if ((d->stepFlagSet & 3) == 0)
-				{
-					if ((d->reserves != 0) && (0 < d->baseSpeed))
-					{
-						iVar9 = d->const_Accel_Reserves;
-					}
-
-					param_1 = d->terrainMeta1->slowUntilSpeed;
-					if ((param_1 != 0x100) && ((d->actionsFlagSet & 0x800000) == 0))
-					{
-						iVar9 = param_1 * iVar9 >> 8;
-					}
-				}
-				else if (0 < d->baseSpeed)
-					goto SET_HIGH_ACCEL;
-			}
-		}
-		else
-		{
-		SET_HIGH_ACCEL:
-			iVar9 = 8000;
-		}
-	PROCESS_ACCEL:
-		uVar10 = (iVar9 * sdata->gGT->elapsedTimeMS) >> 5;
-		gte_ldVXY0(0);
-		gte_ldVZ0(uVar10 & 0xffff);
-		gte_rtv0();
-		read_mt(param_1, param_2, param_3);
-
-		if (d->baseSpeed < 0)
-		{
-			d->unk_offset3B2 = -(s16)uVar10;
-
-			movement.vx -= param_1;
-			movement.vy -= param_2;
-			movement.vz -= param_3;
-
-// unused?
-#if 0
-      d->unkVectorX = -(s16)param_1;
-      d->unkVectorY = -(s16)param_2;
-      d->unkVectorZ = -(s16)param_3;
-#endif
-		}
-		else
-		{
-			d->unk_offset3B2 = (s16)uVar10;
-
-			movement.vx += param_1;
-			movement.vy += param_2;
-			movement.vz += param_3;
-
-// unused?
-#if 0
-      d->unkVectorX = (s16)param_1;
-      d->unkVectorY = (s16)param_2;
-      d->unkVectorZ = (s16)param_3;
-#endif
-		}
-
-		uVar14 = VehCalc_FastSqrt(movement.vx * movement.vx + movement.vy * movement.vy + movement.vz * movement.vz, 0x10);
-
-		iVar9 = (int)d->baseSpeed;
-		if (iVar9 < 0)
-		{
-			iVar9 = -iVar9;
-		}
-		uVar14 = (uVar14 >> 8) - iVar9;
-		bVar2 = (int)uVar10 < (int)uVar14;
-		if ((int)uVar14 < 0)
-		{
-			uVar14 = 0;
-			bVar2 = (int)uVar10 < 0;
-		}
-		if (bVar2)
-		{
-			uVar14 = uVar10;
-		}
-
-		if (((d->actionsFlagSet & 1) == 0) || (d->jump_ForcedMS == 0))
-			goto CHECK_FOR_ANY_JUMP;
-
-		if (d->jump_unknown != 0)
-			d->jump_unknown = 0x180;
-
-		if (d->kartState == KS_BLASTED)
-		{
-			DECOMP_GAMEPAD_ShockFreq(d, 8, 0);
-			DECOMP_GAMEPAD_ShockForce1(d, 8, 0x7f);
-		}
+		d->unkVectorX = (s16)rotated.x;
+		d->unkVectorY = (s16)rotated.y;
+		d->unkVectorZ = (s16)rotated.z;
 	}
 
-// PROCESS_JUMP
-PROCESS_JUMP:
+	speedLoss =
+	    (int)(VehCalc_FastSqrt(movement.x * movement.x + movement.y * movement.y + movement.z * movement.z, 0x10) >> 8) - VehPhysGeneral_Jump_Abs(d->baseSpeed);
 
-	d->jump_TenBuffer = 0;
+	bool clampToForwardImpulse = forwardImpulse < speedLoss;
+	if (speedLoss < 0)
+	{
+		speedLoss = 0;
+		clampToForwardImpulse = forwardImpulse < 0;
+	}
+	if (clampToForwardImpulse)
+	{
+		speedLoss = forwardImpulse;
+	}
+
+	if (((d->actionsFlagSet & ACTION_TOUCH_GROUND) == 0) || (d->jump_ForcedMS == 0))
+	{
+		goto CHECK_FOR_ANY_JUMP;
+	}
+
+	if (d->jump_unknown != 0)
+	{
+		d->jump_unknown = 0x180;
+	}
+
+	if (d->kartState == KS_BLASTED)
+	{
+		DECOMP_GAMEPAD_ShockFreq(d, 8, 0);
+		DECOMP_GAMEPAD_ShockForce1(d, 8, 0x7f);
+	}
+}
+
+	goto PROCESS_JUMP;
+
+CHECK_FOR_ANY_JUMP:
+	if (((d->actionsFlagSet & 0x8000) != 0) && (d->heldItemID == 5))
+	{
+		d->actionsFlagSet &= ~0x8000u;
+
+		if ((d->jump_CoyoteTimerMS != 0) && (d->jump_CooldownMS == 0))
+		{
+			d->jump_ForcedMS = 0xa0;
+
+			int jumpForce = d->const_JumpForce * 9;
+			d->jump_InitialVelY = (s16)VehPhysGeneral_Jump_Div4TowardZero(jumpForce);
+
+			DECOMP_OtherFX_Play_Echo(9, 1, (d->actionsFlagSet >> 16) & 1);
+
+			d->jump_unknown = 0x180;
+			goto PROCESS_JUMP;
+		}
+
+		d->noItemTimer = 0;
+	}
+
+	if (d->forcedJump_trampoline == 0)
+	{
+		if ((d->jump_CoyoteTimerMS == 0) || (d->jump_TenBuffer == 0) || (d->jump_CooldownMS != 0))
+		{
+			if ((d->actionsFlagSet & ACTION_TOUCH_GROUND) != 0)
+			{
+				if ((d->underDriver != NULL) && (d->underDriver->mulNormVecY != 0))
+				{
+					int speedApprox = d->speedApprox;
+					if (speedApprox < 0)
+					{
+						speedApprox = -speedApprox;
+					}
+
+					s16 antiGravVelY = (s16)((d->underDriver->mulNormVecY * speedApprox) >> 8);
+					Vec3 rotated = VehPhysGeneral_Jump_RotateVector(&d->matrixMovingDir, 0, antiGravVelY, 0);
+
+					movement.x += rotated.x;
+					movement.y += rotated.y;
+					movement.z += rotated.z;
+				}
+			}
+
+			goto NOT_JUMPING;
+		}
+
+		d->jump_ForcedMS = 0xa0;
+		d->numberOfJumps++;
+		d->jump_InitialVelY = d->const_JumpForce;
+
+		DECOMP_OtherFX_Play_Echo(8, 1, (d->actionsFlagSet >> 16) & 1);
+	}
+	else
+	{
+		if ((d->jump_ForcedMS == 0) || (d->jump_InitialVelY == d->const_JumpForce))
+		{
+			DECOMP_OtherFX_Play(0x7e, 1);
+		}
+
+		d->jump_ForcedMS = 0xa0;
+
+		int jumpForce = d->const_JumpForce * 3;
+		if (d->forcedJump_trampoline == 2)
+		{
+			d->jump_unknown = 0x180;
+			d->jump_InitialVelY = (s16)jumpForce;
+		}
+		else
+		{
+			d->jump_InitialVelY = (s16)VehPhysGeneral_Jump_Div2TowardZero(jumpForce);
+		}
+
+		d->forcedJump_trampoline = 0;
+	}
+
+PROCESS_JUMP:
 	d->jump_CooldownMS = 0x180;
+	d->jump_TenBuffer = 0;
 	d->actionsFlagSet |= 0x480;
 
-// UNUSED LOOP
-// Take largest jump calculation based on separate AxisAngle vectors
-#if 0
-
-  iVar9 = 0;
-  iVar13 = 0;
-
-  do {
-  
-  iVar4 = DECOMP_VehPhysGeneral_JumpGetVelY(&d->AxisAngle4_normalVec[0],&movement);
-  
-  // Abs Value of Jump, from Given AxisAngle
-  iVar6 = iVar4;
-  if (iVar4 < 0) {
-   iVar6 = -iVar4;
-  }
-  
-  // Compare to largest Jump from AxisAngle(s)
-  iVar5 = iVar9;
-  if (iVar9 < 0) {
-    iVar5 = -iVar9;
-  }
-
-  // If new-largest jump from AxisAngle, save it
-  if (iVar5 < iVar6) {
-    iVar9 = iVar4;
-  }
-
-    //iVar13 ++
-    //iVar8 ++ (next angleAxis)
-  } while (iVar13 < 1)
-
-#else
-
-	iVar9 = DECOMP_VehPhysGeneral_JumpGetVelY(&d->AxisAngle4_normalVec[0], &movement);
-
-#endif
-
-
-	// AxisAngle
-	s16 *axisAngle = &d->AxisAngle1_normalVec;
-	if ((d->actionsFlagSet & 1) == 0)
+	int bestJumpVelY = 0;
+	int jumpVelY = VehPhysGeneral_JumpGetVelY(d->AxisAngle4_normalVec, &movement);
+	if (VehPhysGeneral_Jump_Abs(bestJumpVelY) < VehPhysGeneral_Jump_Abs(jumpVelY))
 	{
-		axisAngle = &d->AxisAngle2_normalVec;
+		bestJumpVelY = jumpVelY;
 	}
 
-	iVar8 = DECOMP_VehPhysGeneral_JumpGetVelY(axisAngle, &movement);
-
-	// jump
-	iVar13 = iVar8;
-	if (iVar8 < 0)
+	s16 *normalVec = d->AxisAngle1_normalVec.v;
+	if ((d->actionsFlagSet & ACTION_TOUCH_GROUND) == 0)
 	{
-		iVar13 = -iVar8;
+		normalVec = d->AxisAngle2_normalVec;
 	}
 
-	// ramp
-	iVar6 = iVar9;
-	if (iVar9 < 0)
+	jumpVelY = VehPhysGeneral_JumpGetVelY(normalVec, &movement);
+
+	int jumpVelYSquared = bestJumpVelY * bestJumpVelY;
+	if (VehPhysGeneral_Jump_Abs(bestJumpVelY) < VehPhysGeneral_Jump_Abs(jumpVelY))
 	{
-		iVar6 = -iVar9;
+		jumpVelYSquared = jumpVelY * jumpVelY;
+		bestJumpVelY = jumpVelY;
 	}
 
-	// ramp OR jump
-	iVar4 = iVar9 * iVar9;
-	if (iVar6 < iVar13)
+	int verticalSpeed = VehCalc_FastSqrt((jumpVelYSquared + (int)d->jump_InitialVelY * (int)d->jump_InitialVelY) >> 8, 8);
+
+	int maxVerticalSpeed = ((u8)sdata->gGT->level1->unk_18C) << 8;
+	if (maxVerticalSpeed == 0)
 	{
-		iVar4 = iVar8 * iVar8;
-		iVar9 = iVar8;
+		maxVerticalSpeed = 0x3700;
+	}
+	else if (maxVerticalSpeed > 0x5000)
+	{
+		maxVerticalSpeed = 0x5000;
 	}
 
-	iVar13 = VehCalc_FastSqrt(iVar4 + (int)d->jump_InitialVelY * (int)d->jump_InitialVelY >> 8, 8);
-
-	// 0 for most tracks, 0x50 for Sewer Speedway
-	uVar10 = sdata->gGT->level1->unk_18C << 8;
-	if (uVar10 == 0)
+	verticalSpeed -= bestJumpVelY;
+	if (maxVerticalSpeed < verticalSpeed)
 	{
-		uVar10 = 0x3700;
-	}
-	else if (0x5000 < uVar10)
-	{
-		uVar10 = 0x5000;
+		verticalSpeed = maxVerticalSpeed;
 	}
 
-	uVar11 = iVar13 - iVar9;
-	if ((int)uVar10 < iVar13 - iVar9)
+	if (movement.y < verticalSpeed)
 	{
-		uVar11 = uVar10;
+		movement.y = verticalSpeed;
 	}
-	if (movement.vy < (int)uVar11)
-	{
-		movement.vy = uVar11;
-	}
-
-	// [end of the first frame of jump]
-
-	// skip here if not jumping
 
 NOT_JUMPING:
-
 	VehPhysCrash_ConvertVecToSpeed(d, &movement);
-	iVar9 = d->speed - uVar14;
-	d->speed = (s16)iVar9;
-	if (iVar9 * 0x10000 < 0)
+
+	int speed = (u16)d->speed - speedLoss;
+	d->speed = (s16)speed;
+	if (d->speed < 0)
 	{
 		d->speed = 0;
 	}
 
-
-	// d->unk36E is related to speedometer needle
-
-
-	iVar9 = (int)d->speedApprox;
-	if (iVar9 < 0)
+	int speedApprox = d->speedApprox;
+	if (speedApprox < 0)
 	{
-		if (iVar9 < 0)
+		speedApprox = -speedApprox;
+
+		if (speedApprox < 0x100)
 		{
-			iVar9 = -iVar9;
-		}
-		if (iVar9 < 0x100)
-		{
-			sVar7 = d->unk36E - (d->unk36E >> 3);
+			d->unk36E = (s16)((u16)d->unk36E - (d->unk36E >> 3));
 		}
 		else
 		{
-			sVar7 = (s16)(d->unk36E * 0xd + (sdata->gGT->timer & 7) * 0x300 >> 4);
+			d->unk36E = (s16)(((u32)((int)d->unk36E * 0xd + (sdata->gGT->timer & 7) * 0x300)) >> 4);
 		}
 	}
 	else
 	{
-		sVar7 = (s16)(d->unk36E * 0xd + iVar9 * 3 >> 4);
+		d->unk36E = (s16)(((int)d->unk36E * 0xd + speedApprox * 3) >> 4);
 	}
-	d->unk36E = sVar7;
+}
 
-
-	return;
+void DECOMP_VehPhysGeneral_JumpAndFriction(struct Thread *t, struct Driver *d)
+{
+	VehPhysGeneral_JumpAndFriction(t, d);
 }

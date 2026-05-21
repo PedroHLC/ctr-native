@@ -18,8 +18,8 @@ void DECOMP_VehPhysProc_FreezeVShift_Init(struct Thread *t, struct Driver *d)
 	}
 }
 
-void DECOMP_VehPhysProc_FreezeVShift_Update();
-void DECOMP_VehPhysProc_FreezeVShift_ReverseOneFrame();
+void DECOMP_VehPhysProc_FreezeVShift_Update(struct Thread *t, struct Driver *d);
+void DECOMP_VehPhysProc_FreezeVShift_ReverseOneFrame(struct Thread *t, struct Driver *d);
 
 void *PlayerAntiVShiftFuncTable[13] = {NULL,
                                        DECOMP_VehPhysProc_FreezeVShift_Update,
@@ -37,18 +37,18 @@ void *PlayerAntiVShiftFuncTable[13] = {NULL,
                                        VehFrameProc_Driving,
                                        VehEmitter_DriverMain
 #else
-// TODO(aalhendi): Port driver collision,
-// freeze-vshift one-frame, matrix translation, frame, and emitter stages.
+// TODO(aalhendi): Port freeze-vshift one-frame stage.
 #ifdef CTR_NATIVE
                                        COLL_MOVED_PlayerSearch,
+                                       VehPhysForce_CollideDrivers,
 #else
                                        NULL,
-#endif
                                        NULL,
+#endif
                                        COLL_FIXED_PlayerSearch,
                                        NULL,
-                                       NULL,
-                                       NULL,
-                                       NULL
+                                       VehPhysForce_TranslateMatrix,
+                                       VehFrameProc_Driving,
+                                       VehEmitter_DriverMain
 #endif
 };

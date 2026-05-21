@@ -19,7 +19,7 @@ void BOTS_ThTick_Drive(struct Thread *thread);
 u32 BOTS_ChangeState(
     struct Driver *d1, int param_2, struct Driver *d2,
     int param_4); // either this needs to return int, or VehPickState_NewState needs to return u32, if I were to guess, this one needs to return int.
-void BOTS_CollideWithOtherAI(int param_1, int param_2);
+void BOTS_CollideWithOtherAI(struct Driver *robot_1, struct Driver *robot_2);
 void BOTS_GotoStartingLine(struct Driver *driver);
 struct Driver *BOTS_Driver_Init(int driverID);
 void BOTS_Driver_Convert(struct Driver *driver);
@@ -411,7 +411,7 @@ void GTE_AudioLR_Driver(MATRIX *m, struct Driver *d, u32 *param_3);
 
 // void OtherFX_RecycleNew(u32* param_1, u32 param_2, u32 param_3);
 void OtherFX_RecycleMute(int *param_1);
-// OtherFX_DriverCrashing()
+void OtherFX_DriverCrashing(u32 boolEcho, u32 volume);
 
 // uh...
 
@@ -461,8 +461,8 @@ void INSTANCE_LevInitAll(struct InstDef *instDef, int num);
 void INSTANCE_LevDelayedLInBs(void *instDefs, u32 numInstances);
 
 // not really part of "INSTANCE" namespace
-int VehFrameInst_GetNumAnimFrames(struct Driver *driver, int param_2);
-int VehFrameInst_GetStartFrame(int midpoint, int numFrames);
+u32 VehFrameInst_GetNumAnimFrames(struct Instance *inst, int animIndex);
+int VehFrameInst_GetStartFrame(int animIndex, int numFrames);
 
 // JitPool
 
@@ -957,11 +957,11 @@ int VehCalc_SteerAccel(int param_1, int param_2, int param_3, u32 param_4, u32 p
 
 // VehParticle
 
-// VehEmitter_Exhaust()
-// VehEmitter_Sparks_Ground()
-// VehEmitter_Terrain_Ground()
-// VehEmitter_Sparks_Wall()
-void VehEmitter_DriverMain();
+struct Particle *VehEmitter_Exhaust(struct Driver *driver, VECTOR *pos, VECTOR *vel);
+void VehEmitter_Sparks_Ground(struct Driver *driver, struct ParticleEmitter *emSet);
+void VehEmitter_Terrain_Ground(struct Driver *driver, struct ParticleEmitter *emSet);
+void VehEmitter_Sparks_Wall(struct Driver *driver, struct ParticleEmitter *emSet);
+void VehEmitter_DriverMain(struct Thread *thread, struct Driver *driver);
 
 // more uncategorized vehicle stuff
 
@@ -970,24 +970,24 @@ void VehFire_Increment(struct Driver *driver, int reserves, u32 type, int fireLe
 // VehFrameInst_GetStartFrame()
 // VehFrameInst_GetNumAnimFrames()
 void VehFrameProc_Driving(struct Thread *t, struct Driver *d);
-void VehFrameProc_Spinning();
-void VehFrameProc_LastSpin();
+void VehFrameProc_Spinning(struct Thread *t, struct Driver *d);
+void VehFrameProc_LastSpin(struct Thread *t, struct Driver *d);
 bool VehGroundShadow_Subset1(struct TextureLayout *pDst, int iconIndex);
 void VehGroundShadow_Main(void);
 // VehGroundSkids_Subset1()
 // VehGroundSkids_Subset2()
 void VehGroundSkids_Main(struct Thread *thread, struct PushBuffer *pb);
 // VehLap_UpdateProgress()
-void VehPhysCrash_ConvertVecToSpeed(struct Driver *d, int *v);
-// VehPhysCrash_BounceSelf()
-// VehPhysCrash_AI()
-// VehPhysCrash_Attack()
-void VehPhysCrash_AnyTwoCars(struct Thread *thread, u16 *param_2, int *param_3);
-void VehPhysForce_ConvertSpeedToVec(struct Driver *d, s16 *velArr, int x);
+void VehPhysCrash_ConvertVecToSpeed(struct Driver *d, Vec3 *v);
+int VehPhysCrash_BounceSelf(s16 *normal, Vec3 *origin, Vec3 *vel, int boolOtherDriver);
+void VehPhysCrash_AI(struct Driver *bot, Vec3 *vel);
+int VehPhysCrash_Attack(struct Driver *driver1, struct Driver *driver2, int canPlayFeedback, int boolPlayBubblePop);
+void VehPhysCrash_AnyTwoCars(struct Thread *thread, u16 *searchWords, Vec3 *selfVel);
+void VehPhysForce_ConvertSpeedToVec(struct Driver *d, Vec3 *vel);
 // VehPhysForce_OnGravity()
 void VehPhysForce_OnApplyForces(struct Thread *t, struct Driver *d);
 void VehPhysForce_CollideDrivers(struct Thread *t, struct Driver *d);
-void VehPhysForce_TranslateMatrix();
+void VehPhysForce_TranslateMatrix(struct Thread *thread, struct Driver *driver);
 void VehPhysForce_RotAxisAngle(MATRIX *m, s16 *normVec, s16 angle);
 void VehPhysForce_AccelTerrainSlope(struct Driver *d);
 
@@ -995,8 +995,8 @@ void VehPhysForce_AccelTerrainSlope(struct Driver *d);
 void VehPhysGeneral_PhysAngular(struct Thread *thread, struct Driver *driver);
 // VehPhysGeneral_LerpQuarterStrength()
 int VehPhysGeneral_LerpToForwards(struct Driver *driver, int param_2, int param_3, int param_4);
-// VehPhysGeneral_JumpGetVelY()
-void VehPhysGeneral_JumpAndFriction();
+int VehPhysGeneral_JumpGetVelY(s16 *normalVec, Vec3 *speedXYZ);
+void VehPhysGeneral_JumpAndFriction(struct Thread *thread, struct Driver *driver);
 void VehPhysGeneral_SetHeldItem(struct Driver *driver);
 int VehPhysGeneral_GetBaseSpeed(struct Driver *driver);
 int VehPhysJoystick_ReturnToRest(int param_1, u32 param_2, struct RacingWheelData *param_3);
@@ -1243,10 +1243,8 @@ void RB_MakeInstanceReflective(struct ScratchpadStruct *, struct Instance *);
 // void COLL_MOVED_PlayerSearch(struct Thread* thread, struct Driver* driver);
 // void VehPhysForce_CollideDrivers(struct Thread* thread, struct Driver* driver);
 // void COLL_FIXED_PlayerSearch(struct Thread* thread, struct Driver* driver);
-void VehPhysForce_TranslateMatrix(struct Thread *thread, struct Driver *driver); // this is present WITH A DIFFERENT SIGNATURE further up the file. Idk why.
-void VehEmitter_DriverMain(struct Thread *thread, struct Driver *driver);        // this is present WITH A DIFFERENT SIGNATURE further up the file. Idk why.
-void FLARE_Init(s16 *);                                                          // this is present (but commented out) further up the file. Idk why.
-int EngineSound_VolumeAdjust(int desired, int current, int amount);              // this is present (but commented out) further up the file. Idk why.
+void FLARE_Init(s16 *);                                             // this is present (but commented out) further up the file. Idk why.
+int EngineSound_VolumeAdjust(int desired, int current, int amount); // this is present (but commented out) further up the file. Idk why.
 void RB_ShieldDark_ThTick_Grow(struct Thread *t);
 void RB_Warpball_ThTick(struct Thread *t);
 struct CheckpointNode *RB_Warpball_NewPathNode(struct CheckpointNode *ptrNodeCurr, struct Driver *victim);

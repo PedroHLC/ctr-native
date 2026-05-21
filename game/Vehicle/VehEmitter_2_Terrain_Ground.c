@@ -1,14 +1,19 @@
 #include <common.h>
 
-extern s16 terrainEmitterPos[4][4];
+static const s16 terrainEmitterPos[4][4] = {
+    {0x1E, 0xA, -0x14, 0},
+    {-0x1E, 0xA, -0x14, 0},
+    {0x1E, 0xA, 0x28, 0},
+    {-0x1E, 0xA, 0x28, 0},
+};
 
-void DECOMP_VehEmitter_Terrain_Ground(struct Driver *d, struct ParticleEmitter *emSet)
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x80059558-0x80059780
+void VehEmitter_Terrain_Ground(struct Driver *d, struct ParticleEmitter *emSet)
 {
 	int speed;
 	char numTires;
 	int pos[3];
 	int vel[3];
-	s16 velInput[3];
 
 	int flags = d->actionsFlagSet;
 
@@ -69,4 +74,7 @@ void DECOMP_VehEmitter_Terrain_Ground(struct Driver *d, struct ParticleEmitter *
 	}
 }
 
-s16 terrainEmitterPos[4][4] = {{0x1E, 0xA, -0x14, 0}, {-0x1E, 0xA, -0x14, 0}, {0x1E, 0xA, 0x28, 0}, {-0x1E, 0xA, 0x28, 0}};
+void DECOMP_VehEmitter_Terrain_Ground(struct Driver *d, struct ParticleEmitter *emSet)
+{
+	VehEmitter_Terrain_Ground(d, emSet);
+}

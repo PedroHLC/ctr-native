@@ -58,18 +58,17 @@ void *PlayerDrivingFuncTable[13] = {NULL,
                                     VehEmitter_DriverMain
 
 #else
-// TODO(aalhendi): Port driver collision, jump/friction,
-// matrix translation, frame processing, and emitter stages.
 #ifdef CTR_NATIVE
                                     COLL_MOVED_PlayerSearch,
+                                    VehPhysForce_CollideDrivers,
 #else
                                     NULL,
+                                    NULL,
 #endif
-                                    NULL,
                                     COLL_FIXED_PlayerSearch,
-                                    NULL,
-                                    NULL,
-                                    NULL,
-                                    NULL
+                                    VehPhysGeneral_JumpAndFriction,
+                                    VehPhysForce_TranslateMatrix,
+                                    VehFrameProc_Driving,
+                                    VehEmitter_DriverMain
 #endif
 };
