@@ -1,5 +1,6 @@
 #include <common.h>
 
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x80068f90-0x80069178
 void DECOMP_VehTalkMask_ThTick(struct Thread *t)
 {
 	struct GameTracker *gGT = sdata->gGT;
@@ -7,20 +8,16 @@ void DECOMP_VehTalkMask_ThTick(struct Thread *t)
 	struct MaskHint *mhObj = t->object;
 	struct Instance *mhInst = t->inst;
 
-	int scale = mhObj->scale;
+	int scale = 0x2000;
 
-	if (
-	    // NULLPTR checks if load started
-	    // IS_PATCHED checks if load finished
-	    (sdata->modelMaskHints3D != 0) && (DRAM_IS_PATCHED(sdata->modelMaskHints3D)))
+	if (sdata->modelMaskHints3D != 0)
 	{
 		mhInst->model = sdata->modelMaskHints3D;
-		scale *= 2;
 	}
-
 	else
 	{
-		// do we need this IF ???
+		scale = 0x1000;
+
 		if (gGT->drivers[0] != 0)
 		{
 			int boolGoodGuy = DECOMP_VehPickupItem_MaskBoolGoodGuy(gGT->drivers[0]);
@@ -31,6 +28,7 @@ void DECOMP_VehTalkMask_ThTick(struct Thread *t)
 		}
 	}
 
+	scale = (mhObj->scale * scale) >> 0xc;
 	mhInst->scale[0] = scale;
 	mhInst->scale[1] = scale;
 	mhInst->scale[2] = scale;
@@ -74,12 +72,7 @@ void DECOMP_VehTalkMask_ThTick(struct Thread *t)
 		}
 	}
 
-	mhInst->animFrame =
-#ifndef REBUILD_PS1
-	    EngineSound_VolumeAdjust(iVar6, iVar5, 1);
-#else
-	    0;
-#endif
+	mhInst->animFrame = DECOMP_EngineSound_VolumeAdjust(iVar6, iVar5, 1);
 
 SkipLerp:
 
@@ -95,12 +88,7 @@ SkipLerp:
 
 	if (iVar4 < 6)
 	{
-		mhInst->animFrame =
-#ifndef REBUILD_PS1
-		    EngineSound_VolumeAdjust(iVar6, iVar5, 1);
-#else
-		    0;
-#endif
+		mhInst->animFrame = DECOMP_EngineSound_VolumeAdjust(iVar6, iVar5, 1);
 	}
 	else
 	{

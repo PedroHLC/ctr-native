@@ -2,6 +2,7 @@
 
 extern void *PlayerWarpingFuncTable[13];
 
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x80068e04-0x80068f90
 void DECOMP_VehStuckProc_Warp_Init(struct Thread *th, struct Driver *d)
 {
 	if (d->kartState == KS_WARP_PAD)
@@ -14,22 +15,22 @@ void DECOMP_VehStuckProc_Warp_Init(struct Thread *th, struct Driver *d)
 	d->KartStates.Warp.quadHeight = d->quadBlockHeight;
 
 	// Warp sound?
-	OtherFX_Play(0x97, 1);
+	DECOMP_OtherFX_Play(0x97, 1);
 
 	char i;
 
-	//  (three sounds)
-	for (i = 0; i < 3; i++)
-	{
-		OtherFX_Stop1((int)d->driverAudioPtrs[i]);
-		d->driverAudioPtrs[i] = NULL;
-	}
+	DECOMP_OtherFX_Stop1((int)d->driverAudioPtrs[1]);
+	d->driverAudioPtrs[1] = NULL;
+	DECOMP_OtherFX_Stop1((int)d->driverAudioPtrs[2]);
+	d->driverAudioPtrs[2] = NULL;
+	DECOMP_OtherFX_Stop1((int)d->driverAudioPtrs[0]);
+	d->driverAudioPtrs[0] = NULL;
 
 	u8 playerID = d->driverID;
 
 	int engine = data.MetaDataCharacters[data.characterIDs[playerID]].engineID;
 
-	EngineAudio_Stop((engine * 4) + playerID);
+	DECOMP_EngineAudio_Stop((engine * 4) + playerID);
 
 	// CameraDC, freecam mode
 	sdata->gGT->cameraDC[playerID].cameraMode = 3;
@@ -38,7 +39,7 @@ void DECOMP_VehStuckProc_Warp_Init(struct Thread *th, struct Driver *d)
 	struct Instance *inst = d->instSelf;
 
 	// instance flags, now reflective
-	inst->flags | 0x4000;
+	inst->flags |= 0x4000;
 
 	// vertical line for split or reflection
 	inst->vertSplit = (s16)(d->quadBlockHeight >> 8);

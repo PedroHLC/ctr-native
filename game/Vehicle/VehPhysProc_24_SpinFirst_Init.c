@@ -8,36 +8,19 @@ void *PlayerSpinningFuncTable[0xD] = {VehPhysProc_SpinFirst_InitSetUpdate,
                                       DECOMP_VehPhysProc_Driving_Audio,
                                       DECOMP_VehPhysProc_SpinFirst_PhysAngular,
                                       DECOMP_VehPhysForce_OnApplyForces,
-
-#ifndef REBUILD_PS1
                                       COLL_MOVED_PlayerSearch,
                                       VehPhysForce_CollideDrivers,
                                       COLL_FIXED_PlayerSearch,
                                       VehPhysGeneral_JumpAndFriction,
                                       VehPhysForce_TranslateMatrix,
                                       VehFrameProc_Spinning,
+                                      VehEmitter_DriverMain};
 
-                                      VehEmitter_DriverMain
-
-#else
-#ifdef CTR_NATIVE
-                                      COLL_MOVED_PlayerSearch,
-                                      VehPhysForce_CollideDrivers,
-#else
-                                      NULL,
-                                      NULL,
-#endif
-                                      COLL_FIXED_PlayerSearch,
-                                      VehPhysGeneral_JumpAndFriction,
-                                      VehPhysForce_TranslateMatrix,
-                                      VehFrameProc_Spinning,
-                                      VehEmitter_DriverMain
-#endif
-};
-
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x80063ec0-0x8006402c
 void VehPhysProc_SpinFirst_Init(struct Thread *t, struct Driver *d)
 {
 	int i;
+	int feedback;
 
 	d->kartState = KS_SPINNING;
 
@@ -49,9 +32,7 @@ void VehPhysProc_SpinFirst_Init(struct Thread *t, struct Driver *d)
 		DECOMP_RB_Player_ModifyWumpa(d, -1);
 	}
 
-#ifndef REBUILD_PS1
 	Voiceline_RequestPlay(3, data.characterIDs[d->driverID], 0x10);
-#endif
 
 	// if spinning left
 	d->KartStates.Spinning.spinDir = 1;
@@ -66,12 +47,12 @@ void VehPhysProc_SpinFirst_Init(struct Thread *t, struct Driver *d)
 
 	if (d->simpTurnState < 1)
 	{
-		i = 0x19;
+		feedback = 0x19;
 	}
 
 	else
 	{
-		i = 0x29;
+		feedback = 0x29;
 	}
 
 	for (i = 0; i < 0xD; i++)
@@ -79,9 +60,7 @@ void VehPhysProc_SpinFirst_Init(struct Thread *t, struct Driver *d)
 		d->funcPtrs[i] = PlayerSpinningFuncTable[i];
 	}
 
-#ifndef REBUILD_PS1
-	GAMEPAD_JogCon1(d, i, 0x60);
-#endif
+	GAMEPAD_JogCon1(d, feedback, 0x60);
 }
 
 void DECOMP_VehPhysProc_SpinFirst_Init(struct Thread *t, struct Driver *d)

@@ -2,6 +2,7 @@
 
 extern void *PlayerEatenFuncTable[13];
 
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x800677d0-0x80067930
 // when eaten by plant on papu pyramid
 void VehStuckProc_PlantEaten_Init(struct Thread *t, struct Driver *d)
 {
@@ -20,9 +21,8 @@ void VehStuckProc_PlantEaten_Init(struct Thread *t, struct Driver *d)
 	d->turbo_outsideTimer = 0;
 	d->reserves = 0;
 
-	// drop bits for airborne (and another?)
-	d->actionsFlagSet &= ~(0x80000);
-	d->actionsFlagSet |= 0x40;
+	// drop bits for airborne and kart-on-ground
+	d->actionsFlagSet &= ~(0x80000 | 0x40);
 
 	// "cloud" is the raincloud after hitting red potion
 
@@ -46,11 +46,12 @@ void VehStuckProc_PlantEaten_Init(struct Thread *t, struct Driver *d)
 	// make invisible
 	inst->flags |= HIDE_MODEL;
 
-	for (i = 0; i < 3; i++)
-	{
-		OtherFX_Stop1((int)d->driverAudioPtrs[i]);
-		d->driverAudioPtrs[i] = NULL;
-	}
+	DECOMP_OtherFX_Stop1((int)d->driverAudioPtrs[1]);
+	d->driverAudioPtrs[1] = NULL;
+	DECOMP_OtherFX_Stop1((int)d->driverAudioPtrs[2]);
+	d->driverAudioPtrs[2] = NULL;
+	DECOMP_OtherFX_Stop1((int)d->driverAudioPtrs[0]);
+	d->driverAudioPtrs[0] = NULL;
 
 	for (i = 0; i < 13; i++)
 		d->funcPtrs[i] = PlayerEatenFuncTable[i];

@@ -1,6 +1,7 @@
 #include <common.h>
 
-void DECOMP_GAMEPAD_JogCon1(struct Driver *d, int val, int timeMS)
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x800263a0-0x800263fc
+void GAMEPAD_JogCon1(struct Driver *d, char val, u16 timeMS)
 {
 	// if AI
 	if ((d->actionsFlagSet & 0x100000) != 0)
@@ -13,4 +14,9 @@ void DECOMP_GAMEPAD_JogCon1(struct Driver *d, int val, int timeMS)
 
 	gb->unk45 = val;
 	gb->unk46 = timeMS;
+}
+
+void DECOMP_GAMEPAD_JogCon1(struct Driver *d, int val, int timeMS)
+{
+	GAMEPAD_JogCon1(d, (char)val, (u16)timeMS);
 }
