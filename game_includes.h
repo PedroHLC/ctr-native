@@ -785,6 +785,7 @@
 #include "game/230/D230.c"
 #include "game/230/230_Full.c"
 
+#include "game/231/R231.c"
 #include "game/231/D231.c"
 #include "game/231/231_Full.c"
 
