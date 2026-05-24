@@ -1,5 +1,8 @@
 #include <common.h>
 
+static char s_teeth[] = "teeth";
+
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x800b9df0-0x800ba2c0.
 void DECOMP_RB_Teeth_LInB(struct Instance *inst)
 {
 	inst->unk50 += 2;
@@ -235,7 +238,7 @@ int DECOMP_RB_Teeth_LInC(struct Instance *teethInst, struct Thread *t, struct Sc
 		// 0 = no relation to param4
 		// 0x300 = SmallStackPool
 		// 0x3 = "static" thread bucket
-		teethTh = DECOMP_PROC_BirthWithObject(0x80303, DECOMP_RB_Teeth_ThTick, 0, 0);
+		teethTh = DECOMP_PROC_BirthWithObject(SIZE_RELATIVE_POOL_BUCKET(sizeof(struct Teeth), NONE, SMALL, STATIC), DECOMP_RB_Teeth_ThTick, s_teeth, NULL);
 
 		teethInst->thread = teethTh;
 
@@ -291,28 +294,19 @@ int DECOMP_RB_Teeth_LInC(struct Instance *teethInst, struct Thread *t, struct Sc
 	return 2;
 }
 
-struct InstDef *DECOMP_RB_Teeth_OpenDoor(struct Instance *inst)
+void DECOMP_RB_Teeth_OpenDoor(struct Instance *inst)
 {
 	struct Thread *teethTh = inst->thread;
 	if (teethTh == NULL)
 	{
-		// 0x8 = size
-		// 0 = no relation to param4
-		// 0x300 flag = SmallStackPool
-		// 0x3 = "static" thread bucket
-		u32 creationFlags = 0x80000 | 0x300 | 0x3;
-
-		// ghidra output says third arg to DECOMP_PROC_BirthWithObject is s_teeth_OVR_231__800b9de8, idk the equivalent.
-		teethTh = DECOMP_PROC_BirthWithObject(creationFlags, DECOMP_RB_Teeth_ThTick, NULL, NULL);
+		teethTh = DECOMP_PROC_BirthWithObject(SIZE_RELATIVE_POOL_BUCKET(sizeof(struct Teeth), NONE, SMALL, STATIC), DECOMP_RB_Teeth_ThTick, s_teeth, NULL);
 		inst->thread = teethTh;
 		if (teethTh == NULL)
-			return NULL;
+			return;
 		teethTh->inst = inst;
-		*(int *)((int)teethTh->object + 4) = 0; // idk what this line does
+		((struct Teeth *)teethTh->object)->timeOpen = 0;
 	}
 	PlaySound3D(0x75, inst);                          // play sound, teeth opening
 	((struct Teeth *)teethTh->object)->direction = 1; // door is open
 	sdata->doorAccessFlags |= 1;                      // enable access through a door (disable collision)
-	// return (struct Instance*)&DAT_80090000;
-	return (struct InstDef *)0x80090000; // todo: make this a reference to named memory
 }
