@@ -68,6 +68,7 @@ struct Driver *RB_CrateAny_GetDriver(struct Thread *t, struct ScratchpadStruct *
 	return (struct Driver *)1;
 }
 
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x800b3d04-0x800b3d7c.
 void DECOMP_RB_CrateAny_ThTick_Explode(struct Thread *t)
 {
 	// this is an "exploded" crate, with
@@ -133,6 +134,7 @@ void RB_CrateAny_ExplodeInit(struct Instance *crateInst, int color)
 	PlaySound3D(0x3c, crateInst);
 }
 
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x800b3d7c-0x800b3e7c.
 void DECOMP_RB_CrateAny_ThTick_Grow(struct Thread *t)
 {
 	struct Instance *crateInst;
@@ -142,6 +144,12 @@ void DECOMP_RB_CrateAny_ThTick_Grow(struct Thread *t)
 	crateInst = t->inst;
 	crateObj = (struct Crate *)t->object;
 	modelID = crateInst->model->id;
+
+	if ((modelID == STATIC_TIME_CRATE_01) || (modelID == STATIC_TIME_CRATE_02) || (modelID == STATIC_TIME_CRATE_03))
+	{
+		crateInst->thread = 0;
+		t->flags |= 0x800;
+	}
 
 	// if cooldown is not done (about a second long)
 	if (crateObj->cooldown != 0)
@@ -160,11 +168,13 @@ void DECOMP_RB_CrateAny_ThTick_Grow(struct Thread *t)
 
 	// == ready to regrow ==
 
-	crateInst->scale[0] += 0x100;
-	crateInst->scale[1] += 0x100;
-	crateInst->scale[2] += 0x100;
-
-	if (crateInst->scale[0] >= 0x1000)
+	if (crateInst->scale[0] < 0x1000)
+	{
+		crateInst->scale[0] += 0x100;
+		crateInst->scale[1] += 0x100;
+		crateInst->scale[2] += 0x100;
+	}
+	else
 	{
 		crateInst->scale[0] = 0x1000;
 		crateInst->scale[1] = 0x1000;
@@ -172,6 +182,7 @@ void DECOMP_RB_CrateAny_ThTick_Grow(struct Thread *t)
 
 		// kill thread
 		crateInst->thread = 0;
+		crateInst->animFrame++;
 		t->flags |= 0x800;
 	}
 }
