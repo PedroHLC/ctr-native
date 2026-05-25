@@ -35,6 +35,7 @@ void DECOMP_MM_Scrapbook_PlayMovie(struct RectMenu *menu)
 		// go to Load State
 		D230.scrapbookState = 1;
 		menu->state &= ~NEEDS_TO_CLOSE;
+		// NOTE(aalhendi): ASM-verified NTSC-U 926 0x800b4070-0x800b408c for scrapbook audio state handoff.
 		DECOMP_Audio_SetState_Safe(1);
 		break;
 
@@ -49,6 +50,7 @@ void DECOMP_MM_Scrapbook_PlayMovie(struct RectMenu *menu)
 			return;
 		}
 
+		// NOTE(aalhendi): ASM-verified NTSC-U 926 0x800b40a8-0x800b40b4 for scrapbook CD stream mode.
 		DECOMP_CDSYS_SetMode_StreamData();
 
 		// \TEST.STR;1
