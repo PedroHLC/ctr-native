@@ -1030,9 +1030,12 @@
 8006ae74 RenderBucket_InitDepthGTE
 8006ae90 RenderBucket_DrawInstPrim_KeyRelicToken
 8006b030 RenderBucket_DrawFunc_Split
-8006b24c RenderBucket_UncompressAnimationFrame_60fps
-8006bad0 Draw_KartFlames
-8006bf30 Draw_KartInWaterMud
+8006b24c RenderBucket_UncompressAnimationFrame_NextFrame
+8006b4c8 Unknown_8006b4c8
+8006b968 RenderBucket_DrawInstPrim_DepthFade
+8006bad0 RenderBucket_DrawInstPrim_ClampDepth
+8006bbc0 RenderBucket_DrawFunc_Special
+8006bf30 RenderBucket_UncompressAnimationFrame_Split
 
 // == 40 more functions, only stubbed in 926 ==
 
@@ -1070,10 +1073,20 @@
 
 // called in Polar Intro (polar flickers without it),
 // also called in normal races sometimes (definitely in demo mode)
-// unknown 8006cdec
+8006cdec RenderBucket_UncompressAnimationFrame_ReflectNextFrame
+8006d094 Unknown_8006d094
+8006d258 Unknown_8006d258
+8006d2bc Unknown_8006d2bc
+8006d324 Unknown_8006d324
+8006d38c Unknown_8006d38c
+8006d3c8 Unknown_8006d3c8
+8006d404 RenderBucket_WaterSplitInterpWhite
+8006d428 RenderBucket_WaterSplitInterpColor
+8006d4a4 RenderBucket_WaterSplitInterpBase
+8006d55c Unknown_8006d55c
 
 // hole: several unstubbed functions after this
-// unknown 8006d5b8
+8006d5b8 Unknown_8006d5b8
 
 8006d670 RenderBucket_DrawInstPrim_Ghost
 
@@ -1110,9 +1123,8 @@
 80070720 RenderBucket_QueueLevInstances
 8007084c RenderBucket_QueueNonLevInstances
 80070950 RenderBucket_QueueDraw
-
-// unknown 80071524
-// unknown 80071590
+80071524 Unknown_80071524
+80071590 Unknown_80071590
 
 800715e8 ThTick_RunBucket
 80071694 ThTick_FastRET

@@ -92,7 +92,8 @@ _Static_assert(offsetof(struct RenderBucketSplitVertex, splitDist) == 0xe);
 _Static_assert(offsetof(struct RenderBucketSplitVertex, sxy) == 0x10);
 _Static_assert(offsetof(struct RenderBucketSplitVertex, sz) == 0x14);
 
-#define RB_RETAIL_INST_FUNC3_SPLIT_WHITE ((u32)0x8006d404U)
+#define RB_RETAIL_INST_FUNC3_SPLIT_WHITE  ((u32)0x8006d404U)
+#define RB_RETAIL_INST_FUNC3_SPLIT_INTERP ((u32)0x8006d428U)
 
 struct RenderBucketBounds
 {
@@ -164,6 +165,7 @@ struct RenderBucketDrawContext
 	u32 primCommand;
 	int vertexIndex;
 	int splitPlane;
+	int waterSplitSide;
 };
 
 static int RenderBucket_SignExtendBits(u32 value, int bits)
@@ -244,9 +246,10 @@ static inline void RenderBucket_WaterSplitInterpolateVertex(struct RenderBucketD
 {
 	int denom = (s16)(to->xy >> 16) - (s16)(from->xy >> 16);
 	int factor = RenderBucket_MipsSllSigned(from->splitDist, 16) / denom;
+	u32 colorHelper = (u32)(uintptr_t)ctx->inst->funcPtr[3];
 
-	// NOTE(aalhendi): Source-backs helper cluster 0x8006d094-0x8006d55c.
-	// This split clips against model-space Y, not the depth plane used by 0x8006b4c8.
+	// NOTE(aalhendi): ASM-verified helper 0x8006d4a4-0x8006d55c. This split
+	// clips against model-space Y, not the depth plane used by 0x8006b4c8.
 	if (hasTexture != 0)
 	{
 		u8 u = RenderBucket_InterpU8((u8)from->uv, (u8)to->uv, factor);
@@ -256,12 +259,21 @@ static inline void RenderBucket_WaterSplitInterpolateVertex(struct RenderBucketD
 
 	dst->xy = RenderBucket_PackXY(RenderBucket_InterpS16((s16)from->xy, (s16)to->xy, factor), splitLine);
 	dst->z = (u32)(RenderBucket_MipsMulLoSra16((s32)to->z - (s32)from->z, factor) + (s32)from->z);
-	if ((u32)(uintptr_t)ctx->inst->funcPtr[3] == RB_RETAIL_INST_FUNC3_SPLIT_WHITE)
+	if (colorHelper == RB_RETAIL_INST_FUNC3_SPLIT_WHITE)
 	{
+		// NOTE(aalhendi): ASM-verified helper 0x8006d404-0x8006d428.
 		dst->color = 0x00ffffff;
 	}
 	else
 	{
+#ifdef CTR_INTERNAL
+		if ((colorHelper != RB_RETAIL_INST_FUNC3_SPLIT_INTERP) && (CtrTireDebug_ShouldLog(CTR_TIREDBG_RENDERBUCKET_UNHANDLED) != 0))
+		{
+			fprintf(stderr, "[TIREDBG][rb-split-unhandled-color-helper] inst=%p func=%08x\n", (void *)ctx->inst, colorHelper);
+		}
+#endif
+		// NOTE(aalhendi): ASM-verified helper 0x8006d428-0x8006d4a4 for the
+		// retail table's non-white generated-vertex color path.
 		dst->color = (u32)RenderBucket_InterpU8((u8)from->color, (u8)to->color, factor) |
 		             ((u32)RenderBucket_InterpU8((u8)(from->color >> 8), (u8)(to->color >> 8), factor) << 8) |
 		             ((u32)RenderBucket_InterpU8((u8)(from->color >> 16), (u8)(to->color >> 16), factor) << 16);
@@ -1829,9 +1841,8 @@ static struct RenderBucketUncompressResult RenderBucket_UncompressAnimationFrame
 		int bz = RenderBucket_SignExtendBits(temporal >> 17, 8);
 		int by = RenderBucket_SignExtendBits(temporal >> 9, 8);
 
-		// NOTE(aalhendi): Source-backs retail 0x8006b294-0x8006b460. It consumes
-		// current and next compressed streams with the same temporal word, while
-		// keeping independent byte accumulators for both frames.
+		// NOTE(aalhendi): ASM-verified retail 0x8006b294-0x8006b460. It consumes
+		// current and next compressed streams with the same temporal word.
 		RenderBucket_ReadNextFrameDeltaComponent(ctx, xBits, bx, &ctx->x_alu, &ctx->x_next_alu);
 		RenderBucket_ReadNextFrameDeltaComponent(ctx, zBits, bz, &ctx->y_alu, &ctx->y_next_alu);
 		RenderBucket_ReadNextFrameDeltaComponent(ctx, yBits, by, &ctx->z_alu, &ctx->z_next_alu);
@@ -1848,7 +1859,7 @@ static struct RenderBucketUncompressResult RenderBucket_UncompressAnimationFrame
 		RenderBucketCompVertex *currVerts = (RenderBucketCompVertex *)ctx->vertData;
 		RenderBucketCompVertex *nextVerts = (RenderBucketCompVertex *)ctx->nextVertData;
 
-		// NOTE(aalhendi): Source-backs retail 0x8006b26c-0x8006b290. Both frame
+		// NOTE(aalhendi): ASM-verified retail 0x8006b26c-0x8006b290. Both frame
 		// vertex streams advance together before the interpolated pack.
 		ctx->stack[stackIndex].x = currVerts[ctx->vertexIndex].x;
 		ctx->stack[stackIndex].y = currVerts[ctx->vertexIndex].y;
@@ -1872,8 +1883,8 @@ static struct RenderBucketUncompressResult RenderBucket_TransformSplitDecodedVer
 	if ((flags & 4) != 0)
 		return result;
 
-	// NOTE(aalhendi): Retail 0x8006bf30 decodes like 0x8006a8e0, then runs
-	// the packed vertex through the split light matrix with MVMVA sf0.
+	// NOTE(aalhendi): ASM-verified retail 0x8006bf30/0x8006cdec split
+	// transform tail: packed VXY/VZ through the split light matrix with MVMVA.
 	MTC2(result.packed.xy, 0);
 	MTC2(result.packed.z, 1);
 	doCOP2(0x04a6012);
@@ -1893,9 +1904,8 @@ static struct RenderBucketUncompressResult RenderBucket_UncompressAnimationFrame
 static struct RenderBucketUncompressResult RenderBucket_UncompressAnimationFrame_ReflectNextFrame(struct RenderBucketDrawContext *ctx, u32 command,
                                                                                                   u16 stackIndex)
 {
-	// NOTE(aalhendi): Source-backs retail 0x8006cdec-0x8006d094. This is the
-	// next-frame/interpolated counterpart to 0x8006bf30: decode through
-	// 0x8006b24c semantics, then apply the split light-matrix transform.
+	// NOTE(aalhendi): ASM-verified next-frame counterpart to 0x8006bf30:
+	// decode through 0x8006b24c semantics, then apply the split transform.
 	return RenderBucket_TransformSplitDecodedVertex(ctx, command, stackIndex, RenderBucket_UncompressAnimationFrame_NextFrame(ctx, command, stackIndex));
 }
 
@@ -2023,6 +2033,8 @@ static int RenderBucket_CheckProjectedPrim(struct RenderBucketDrawContext *ctx, 
 {
 	int depthMac0;
 
+	// NOTE(aalhendi): Source-backs the shared retail projection gate:
+	// flag reject, optional NCLIP, AVSZ3, screen-window reject, then MAC0.
 	if ((s32)(gteFlag << 13) < 0)
 		return 0;
 
@@ -2240,7 +2252,8 @@ static int RenderBucket_DrawInstPrim_NormalAtRange(struct RenderBucketDrawContex
 	return RenderBucket_DrawInstPrim_NormalAtOTEntry(ctx, command, tex, RenderBucket_GetNormalOTEntry(activeRange, depthMac0));
 }
 
-static int RenderBucket_DrawInstPrim_KeyRelicToken(struct RenderBucketDrawContext *ctx, u32 command, struct TextureLayout *tex, int depthMac0)
+static int RenderBucket_DrawInstPrim_KeyRelicTokenAtRange(struct RenderBucketDrawContext *ctx, u32 command, struct TextureLayout *tex, int activeRange,
+                                                          int depthMac0)
 {
 	u_long *otEntry;
 	int signedTest;
@@ -2261,7 +2274,7 @@ static int RenderBucket_DrawInstPrim_KeyRelicToken(struct RenderBucketDrawContex
 	if (tex == 0)
 		return 0;
 
-	otEntry = RenderBucket_GetNormalOTEntry(ctx->idpp->unkE4, depthMac0);
+	otEntry = RenderBucket_GetNormalOTEntry(activeRange, depthMac0);
 	if (otEntry == 0)
 		return 0;
 
@@ -2331,6 +2344,11 @@ static int RenderBucket_DrawInstPrim_KeyRelicToken(struct RenderBucketDrawContex
 	return 0;
 }
 
+static int RenderBucket_DrawInstPrim_KeyRelicToken(struct RenderBucketDrawContext *ctx, u32 command, struct TextureLayout *tex, int depthMac0)
+{
+	return RenderBucket_DrawInstPrim_KeyRelicTokenAtRange(ctx, command, tex, ctx->idpp->unkE4, depthMac0);
+}
+
 int RenderBucket_DrawInstPrim_Normal(struct RenderBucketDrawContext *ctx, u32 command, struct TextureLayout *tex, int depthMac0)
 {
 	return RenderBucket_DrawInstPrim_NormalAtRange(ctx, command, tex, ctx->idpp->unkE4, depthMac0);
@@ -2362,7 +2380,8 @@ static u32 RenderBucket_DepthFadeColor(u32 color, int sz)
 	return (u32)MFC2(22);
 }
 
-static int RenderBucket_DrawInstPrim_DepthFade(struct RenderBucketDrawContext *ctx, u32 command, struct TextureLayout *tex, int depthMac0)
+static int RenderBucket_DrawInstPrim_DepthFadeAtRange(struct RenderBucketDrawContext *ctx, u32 command, struct TextureLayout *tex, int activeRange,
+                                                      int depthMac0)
 {
 	u_long *otEntry;
 	u32 color0;
@@ -2375,7 +2394,7 @@ static int RenderBucket_DrawInstPrim_DepthFade(struct RenderBucketDrawContext *c
 	if (tex == 0)
 		return 0;
 
-	otEntry = RenderBucket_GetNormalOTEntry(ctx->idpp->unkE4, depthMac0);
+	otEntry = RenderBucket_GetNormalOTEntry(activeRange, depthMac0);
 	if (otEntry == 0)
 		return 0;
 
@@ -2406,15 +2425,26 @@ static int RenderBucket_DrawInstPrim_DepthFade(struct RenderBucketDrawContext *c
 	return 0;
 }
 
-static int RenderBucket_DrawInstPrim_ClampDepth(struct RenderBucketDrawContext *ctx, u32 command, struct TextureLayout *tex, int depthMac0)
+static int RenderBucket_DrawInstPrim_DepthFade(struct RenderBucketDrawContext *ctx, u32 command, struct TextureLayout *tex, int depthMac0)
 {
-	// NOTE(aalhendi): Source-backs retail 0x8006bad0-0x8006bbc0. This writer
-	// clamps the MAC0-derived OT bin to IDPP depthOffset[0..1], then falls
-	// through the same G3/GT3 primitive body as 0x8006ad88.
-	return RenderBucket_DrawInstPrim_NormalAtOTEntry(ctx, command, tex, RenderBucket_GetClampedOTEntry(ctx, ctx->idpp->unkE4, depthMac0));
+	return RenderBucket_DrawInstPrim_DepthFadeAtRange(ctx, command, tex, ctx->idpp->unkE4, depthMac0);
 }
 
-static int RenderBucket_DrawInstPrim_LitTexture(struct RenderBucketDrawContext *ctx, u32 command, struct TextureLayout *tex, int depthMac0)
+static int RenderBucket_DrawInstPrim_ClampDepthAtRange(struct RenderBucketDrawContext *ctx, u32 command, struct TextureLayout *tex, int activeRange,
+                                                       int depthMac0)
+{
+	// NOTE(aalhendi): ASM-verified retail 0x8006bad0-0x8006bbc0. Native passes
+	// the scratch active range and MAC0-derived depth as explicit arguments.
+	return RenderBucket_DrawInstPrim_NormalAtOTEntry(ctx, command, tex, RenderBucket_GetClampedOTEntry(ctx, activeRange, depthMac0));
+}
+
+static int RenderBucket_DrawInstPrim_ClampDepth(struct RenderBucketDrawContext *ctx, u32 command, struct TextureLayout *tex, int depthMac0)
+{
+	return RenderBucket_DrawInstPrim_ClampDepthAtRange(ctx, command, tex, ctx->idpp->unkE4, depthMac0);
+}
+
+static int RenderBucket_DrawInstPrim_LitTextureAtRange(struct RenderBucketDrawContext *ctx, u32 command, struct TextureLayout *tex, int activeRange,
+                                                       int depthMac0)
 {
 	u_long *otEntry;
 	int signedTest;
@@ -2437,7 +2467,7 @@ static int RenderBucket_DrawInstPrim_LitTexture(struct RenderBucketDrawContext *
 	if (tex == 0)
 		return 0;
 
-	otEntry = RenderBucket_GetNormalOTEntry(ctx->idpp->unkE4, depthMac0);
+	otEntry = RenderBucket_GetNormalOTEntry(activeRange, depthMac0);
 	if (otEntry == 0)
 		return 0;
 
@@ -2522,10 +2552,14 @@ static int RenderBucket_DrawInstPrim_LitTexture(struct RenderBucketDrawContext *
 	return 0;
 }
 
-static int RenderBucket_DrawInstPrim_Ghost(struct RenderBucketDrawContext *ctx, u32 command, struct TextureLayout *tex, int depthMac0)
+static int RenderBucket_DrawInstPrim_LitTexture(struct RenderBucketDrawContext *ctx, u32 command, struct TextureLayout *tex, int depthMac0)
+{
+	return RenderBucket_DrawInstPrim_LitTextureAtRange(ctx, command, tex, ctx->idpp->unkE4, depthMac0);
+}
+
+static int RenderBucket_DrawInstPrim_GhostAtRange(struct RenderBucketDrawContext *ctx, u32 command, struct TextureLayout *tex, int activeRange, int depthMac0)
 {
 	u_long *otEntry;
-	int activeRange = ctx->idpp->unkE4;
 	int alpha = ctx->idpp->alphaScale;
 	u32 *p;
 
@@ -2592,7 +2626,12 @@ static int RenderBucket_DrawInstPrim_Ghost(struct RenderBucketDrawContext *ctx, 
 	return 0;
 }
 
-static int RenderBucket_DispatchDrawInstPrim(struct RenderBucketDrawContext *ctx, u32 command, struct TextureLayout *tex, int depthMac0)
+static int RenderBucket_DrawInstPrim_Ghost(struct RenderBucketDrawContext *ctx, u32 command, struct TextureLayout *tex, int depthMac0)
+{
+	return RenderBucket_DrawInstPrim_GhostAtRange(ctx, command, tex, ctx->idpp->unkE4, depthMac0);
+}
+
+static int RenderBucket_DispatchDrawInstPrimAtRange(struct RenderBucketDrawContext *ctx, u32 command, struct TextureLayout *tex, int activeRange, int depthMac0)
 {
 	switch ((u32)(uintptr_t)ctx->inst->funcPtr[1])
 	{
@@ -2600,25 +2639,25 @@ static int RenderBucket_DispatchDrawInstPrim(struct RenderBucketDrawContext *ctx
 		return RenderBucket_DrawInstPrim_SelectRange(ctx, command, tex, depthMac0);
 
 	case RB_RETAIL_INST_PRIM_NORMAL:
-		return RenderBucket_DrawInstPrim_Normal(ctx, command, tex, depthMac0);
+		return RenderBucket_DrawInstPrim_NormalAtRange(ctx, command, tex, activeRange, depthMac0);
 
 	case RB_RETAIL_INST_PRIM_DEPTH_FADE:
-		return RenderBucket_DrawInstPrim_DepthFade(ctx, command, tex, depthMac0);
+		return RenderBucket_DrawInstPrim_DepthFadeAtRange(ctx, command, tex, activeRange, depthMac0);
 
 	case RB_RETAIL_INST_PRIM_KEY_TOKEN:
-		return RenderBucket_DrawInstPrim_KeyRelicToken(ctx, command, tex, depthMac0);
+		return RenderBucket_DrawInstPrim_KeyRelicTokenAtRange(ctx, command, tex, activeRange, depthMac0);
 
 	case RB_RETAIL_INST_PRIM_CLAMP_DEPTH:
-		return RenderBucket_DrawInstPrim_ClampDepth(ctx, command, tex, depthMac0);
+		return RenderBucket_DrawInstPrim_ClampDepthAtRange(ctx, command, tex, activeRange, depthMac0);
 
 	case RB_RETAIL_INST_PRIM_LIT_TEXTURE:
-		return RenderBucket_DrawInstPrim_LitTexture(ctx, command, tex, depthMac0);
+		return RenderBucket_DrawInstPrim_LitTextureAtRange(ctx, command, tex, activeRange, depthMac0);
 
 	case RB_RETAIL_INST_PRIM_GHOST:
-		return RenderBucket_DrawInstPrim_Ghost(ctx, command, tex, depthMac0);
+		return RenderBucket_DrawInstPrim_GhostAtRange(ctx, command, tex, activeRange, depthMac0);
 
 	default:
-		// TODO(aalhendi): Port the remaining Instance+0x60 primitive writers.
+		// TODO(aalhendi): Port any newly observed Instance+0x60 primitive writers.
 		// Do not draw through the normal writer here; that masks live retail rows.
 #ifdef CTR_INTERNAL
 		if (CtrTireDebug_ShouldLog(CTR_TIREDBG_RENDERBUCKET_UNHANDLED) != 0)
@@ -2629,6 +2668,11 @@ static int RenderBucket_DispatchDrawInstPrim(struct RenderBucketDrawContext *ctx
 #endif
 		return 0;
 	}
+}
+
+static int RenderBucket_DispatchDrawInstPrim(struct RenderBucketDrawContext *ctx, u32 command, struct TextureLayout *tex, int depthMac0)
+{
+	return RenderBucket_DispatchDrawInstPrimAtRange(ctx, command, tex, ctx->idpp->unkE4, depthMac0);
 }
 
 static int RenderBucket_SelectPrimitiveActiveRange(struct RenderBucketDrawContext *ctx, u32 command)
@@ -2662,17 +2706,24 @@ static void RenderBucket_LoadSplitPrimColors(struct RenderBucketDrawContext *ctx
 		gte_dpct();
 }
 
-static int RenderBucket_DrawSplitPrimitiveAtRange(struct RenderBucketDrawContext *ctx, u32 command, struct TextureLayout *tex, int activeRange, int depthMac0,
-                                                  const struct RenderBucketSplitVertex *v0, const struct RenderBucketSplitVertex *v1,
-                                                  const struct RenderBucketSplitVertex *v2)
+static int RenderBucket_SplitPrimitiveWriterSupported(struct RenderBucketDrawContext *ctx)
+{
+	u32 prim = (u32)(uintptr_t)ctx->inst->funcPtr[1];
+
+	return (prim == RB_RETAIL_INST_PRIM_NORMAL) || (prim == RB_RETAIL_INST_PRIM_SELECT_RANGE) || (prim == RB_RETAIL_INST_PRIM_DEPTH_FADE) ||
+	       (prim == RB_RETAIL_INST_PRIM_KEY_TOKEN) || (prim == RB_RETAIL_INST_PRIM_CLAMP_DEPTH) || (prim == RB_RETAIL_INST_PRIM_LIT_TEXTURE) ||
+	       (prim == RB_RETAIL_INST_PRIM_GHOST);
+}
+
+static int RenderBucket_DrawSplitPrimitiveNormalAtOTEntry(struct RenderBucketDrawContext *ctx, u32 command, struct TextureLayout *tex, u_long *otEntry,
+                                                          const struct RenderBucketSplitVertex *v0, const struct RenderBucketSplitVertex *v1,
+                                                          const struct RenderBucketSplitVertex *v2)
 {
 	u16 texIndex = command & 0x1ff;
-	u_long *otEntry;
 
 	if ((char *)ctx->primMem->curr + sizeof(POLY_GT3) >= (char *)ctx->primMem->endMin100)
 		return -1;
 
-	otEntry = RenderBucket_GetNormalOTEntry(activeRange, depthMac0);
 	if (otEntry == 0)
 		return 0;
 
@@ -2734,8 +2785,364 @@ static int RenderBucket_DrawSplitPrimitiveAtRange(struct RenderBucketDrawContext
 	return 0;
 }
 
+static u32 RenderBucket_TextureWordWithSplitUv(u32 texWord, u16 uv)
+{
+	return (texWord & 0xffff0000U) | uv;
+}
+
+static void RenderBucket_LoadSplitProjectedRegs(const struct RenderBucketSplitVertex *v0, const struct RenderBucketSplitVertex *v1,
+                                                const struct RenderBucketSplitVertex *v2)
+{
+	MTC2(v0->sxy, 12);
+	MTC2(v0->sz, 17);
+	MTC2(v1->sxy, 13);
+	MTC2(v1->sz, 18);
+	MTC2(v2->sxy, 14);
+	MTC2(v2->sz, 19);
+}
+
+static u32 RenderBucket_LightFlatTextureColor(u32 sourceColor, int signedTest)
+{
+	u32 litColor;
+	int add;
+	int brightness;
+	int distance;
+	u32 r;
+	u32 g;
+	u32 b;
+
+	MTC2((s32)(sourceColor << 24) >> 19, 9);
+	MTC2((s32)((sourceColor >> 8) << 24) >> 19, 10);
+	MTC2((s32)((sourceColor >> 16) << 24) >> 19, 11);
+	gte_lcir();
+
+	brightness = MFC2_S(9) + 0x1000;
+	distance = MFC2_S(11) >> 3;
+	brightness = (((brightness * 7) + 0x2000) >> 4);
+	if (signedTest < 0)
+		brightness >>= 1;
+
+	MTC2(brightness, 8);
+	gte_dpcs();
+
+	if (distance < 0)
+		distance = -distance;
+
+	add = 0;
+	distance -= 0x180;
+	if (distance >= 0)
+	{
+		if (distance >= 0x80)
+			distance = 0x7f;
+
+		add = sRenderBucketKeyRelicBrightness8008a2c4[distance];
+	}
+
+	litColor = (u32)MFC2(22);
+	if (signedTest < 0)
+		add >>= 3;
+
+	r = RenderBucket_SaturateU8((litColor & 0xff) + add);
+	g = RenderBucket_SaturateU8(((litColor >> 8) & 0xff) + add);
+	b = RenderBucket_SaturateU8(((litColor >> 16) & 0xff) + add);
+	return (b << 16) | (g << 8) | r;
+}
+
+static void RenderBucket_WriteSplitFT3(POLY_FT3 *p, const struct RenderBucketSplitVertex *v0, const struct RenderBucketSplitVertex *v1,
+                                       const struct RenderBucketSplitVertex *v2, u32 texWord0, u32 texWord1, u32 texWord2)
+{
+	p->x0 = (s16)v0->sxy;
+	p->y0 = (s16)(v0->sxy >> 16);
+	*(u32 *)&p->u0 = texWord0;
+	p->x1 = (s16)v1->sxy;
+	p->y1 = (s16)(v1->sxy >> 16);
+	*(u32 *)&p->u1 = texWord1;
+	p->x2 = (s16)v2->sxy;
+	p->y2 = (s16)(v2->sxy >> 16);
+	*(u32 *)&p->u2 = texWord2;
+}
+
+static int RenderBucket_DrawSplitPrimitiveDepthFadeAtRange(struct RenderBucketDrawContext *ctx, u32 command, struct TextureLayout *tex, int activeRange,
+                                                           int depthMac0, const struct RenderBucketSplitVertex *v0, const struct RenderBucketSplitVertex *v1,
+                                                           const struct RenderBucketSplitVertex *v2)
+{
+	u_long *otEntry;
+	u32 color0;
+	u32 color1;
+	u32 color2;
+	POLY_GT3 *p;
+
+	if (tex == 0)
+		return 0;
+
+	otEntry = RenderBucket_GetNormalOTEntry(activeRange, depthMac0);
+	if (otEntry == 0)
+		return 0;
+
+	color0 = RenderBucket_DepthFadeColor(v0->color, (int)v0->sz);
+	color1 = RenderBucket_DepthFadeColor(v1->color, (int)v1->sz);
+	color2 = RenderBucket_DepthFadeColor(v2->color, (int)v2->sz);
+	if ((color0 | color1 | color2) == 0)
+		return 0;
+
+	if ((char *)ctx->primMem->curr + sizeof(POLY_GT3) >= (char *)ctx->primMem->endMin100)
+		return -1;
+
+	// NOTE(aalhendi): Source-backs generated-split use of retail 0x8006b968:
+	// depth-fade still writes GT3, but generated vertices supply SXY/SZ and UV.
+	p = ctx->primMem->curr;
+	*(u32 *)&p->r0 = 0x36000000 | (color0 & 0x00ffffff);
+	*(u32 *)&p->r1 = color1;
+	*(u32 *)&p->r2 = color2;
+	p->x0 = (s16)v0->sxy;
+	p->y0 = (s16)(v0->sxy >> 16);
+	p->u0 = (u8)v0->uv;
+	p->v0 = (u8)(v0->uv >> 8);
+	p->clut = tex->clut;
+	p->x1 = (s16)v1->sxy;
+	p->y1 = (s16)(v1->sxy >> 16);
+	p->u1 = (u8)v1->uv;
+	p->v1 = (u8)(v1->uv >> 8);
+	p->tpage = tex->tpage;
+	p->x2 = (s16)v2->sxy;
+	p->y2 = (s16)(v2->sxy >> 16);
+	p->u2 = (u8)v2->uv;
+	p->v2 = (u8)(v2->uv >> 8);
+	RenderBucket_LinkPrimRaw(otEntry, p, 0x09000000);
+	ctx->primMem->curr = (char *)p + 0x28;
+	return 0;
+}
+
+static int RenderBucket_DrawSplitPrimitiveGhostAtRange(struct RenderBucketDrawContext *ctx, u32 command, struct TextureLayout *tex, int activeRange,
+                                                       int depthMac0, const struct RenderBucketSplitVertex *v0, const struct RenderBucketSplitVertex *v1,
+                                                       const struct RenderBucketSplitVertex *v2)
+{
+	u_long *otEntry;
+	int alpha = ctx->idpp->alphaScale;
+	u32 *p;
+
+	otEntry = RenderBucket_GetNormalOTEntry(activeRange, depthMac0);
+	if (otEntry == 0)
+		return 0;
+
+	MTC2(v0->color, 20);
+	MTC2(v1->color, 21);
+	MTC2(v2->color, 22);
+	MTC2(alpha, 8);
+
+	if (alpha == 0)
+		return RenderBucket_DrawSplitPrimitiveNormalAtOTEntry(ctx, command, tex, otEntry, v0, v1, v2);
+
+	if ((char *)ctx->primMem->curr + 0x40 >= (char *)ctx->primMem->endMin100)
+		return -1;
+
+	gte_dpct();
+
+	// NOTE(aalhendi): Source-backs generated-split use of retail 0x8006d670:
+	// same ghost primitive packet, but generated vertices supply SXY and UV.
+	p = (u32 *)ctx->primMem->curr;
+	p[1] = 0xe1000a40;
+	p[2] = 0;
+	p[3] = *CTR_SCRATCHPAD_PTR(u32, 0x124);
+	p[4] = v0->sxy;
+	p[5] = v1->sxy;
+	p[6] = v2->sxy;
+
+	if (tex == 0)
+	{
+		p[7] = 0xe1000a20;
+		p[8] = 0;
+		p[9] = 0x32000000 | (u32)MFC2(20);
+		p[10] = v0->sxy;
+		p[11] = (u32)MFC2(21);
+		p[12] = v1->sxy;
+		p[13] = (u32)MFC2(22);
+		p[14] = v2->sxy;
+
+		RenderBucket_LinkPrimRaw(otEntry, p, 0x0e000000);
+		ctx->primMem->curr = (char *)p + 0x3c;
+	}
+	else
+	{
+		u32 texWord0 = RenderBucket_TextureWordWithSplitUv(*(u32 *)&tex->u0, v0->uv);
+		u32 texWord1 = RenderBucket_TextureWordWithSplitUv((*(u32 *)&tex->u1 & ~0x00600000U) | 0x00200000U, v1->uv);
+		u32 texWord2 = RenderBucket_TextureWordWithSplitUv(*(u32 *)&tex->u2, v2->uv);
+
+		p[7] = 0x36000000 | (u32)MFC2(20);
+		p[8] = v0->sxy;
+		p[9] = texWord0;
+		p[10] = (u32)MFC2(21);
+		p[11] = v1->sxy;
+		p[12] = texWord1;
+		p[13] = (u32)MFC2(22);
+		p[14] = v2->sxy;
+		p[15] = texWord2;
+
+		RenderBucket_LinkPrimRaw(otEntry, p, 0x0f000000);
+		ctx->primMem->curr = (char *)p + 0x40;
+	}
+
+	return 0;
+}
+
+static int RenderBucket_DrawSplitPrimitiveKeyRelicTokenAtRange(struct RenderBucketDrawContext *ctx, u32 command, struct TextureLayout *tex, int activeRange,
+                                                               int depthMac0, const struct RenderBucketSplitVertex *v0,
+                                                               const struct RenderBucketSplitVertex *v1, const struct RenderBucketSplitVertex *v2)
+{
+	u_long *otEntry;
+	int signedTest;
+	u32 texWord0;
+	u32 texWord1;
+	u32 texWord2;
+	u32 codeWord;
+	u32 tpageMask;
+	POLY_FT3 *p;
+
+	if ((char *)ctx->primMem->curr + sizeof(POLY_FT3) >= (char *)ctx->primMem->endMin100)
+		return -1;
+
+	if (tex == 0)
+		return 0;
+
+	otEntry = RenderBucket_GetNormalOTEntry(activeRange, depthMac0);
+	if (otEntry == 0)
+		return 0;
+
+	RenderBucket_LoadSplitProjectedRegs(v0, v1, v2);
+	gte_nclip();
+	signedTest = MFC2_S(24) ^ ((s16)ctx->idpp->instFlags ^ (int)(command << 2));
+	if (signedTest < 0)
+		otEntry++;
+
+	texWord0 = RenderBucket_TextureWordWithSplitUv(*(u32 *)&tex->u0, v0->uv);
+	texWord1 = RenderBucket_TextureWordWithSplitUv(*(u32 *)&tex->u1, v1->uv);
+	texWord2 = RenderBucket_TextureWordWithSplitUv(*(u32 *)&tex->u2, v2->uv);
+
+	codeWord = 0x24000000;
+	tpageMask = 0x00600000;
+	if (((texWord1 & 0x00600000U) == 0) && (signedTest >= 0))
+	{
+		codeWord = 0x26000000;
+		tpageMask = 0x00200000;
+	}
+
+	// NOTE(aalhendi): Source-backs generated-split use of retail 0x8006ae90:
+	// same flat textured writer, with generated SXY/UV and generated color.
+	p = ctx->primMem->curr;
+	*(u32 *)&p->r0 = codeWord | RenderBucket_LightFlatTextureColor(v0->color, signedTest);
+	RenderBucket_WriteSplitFT3(p, v0, v1, v2, texWord0, texWord1 | tpageMask, texWord2);
+
+	RenderBucket_LinkPrimRaw(otEntry, p, 0x07000000);
+	ctx->primMem->curr = (char *)p + 0x20;
+	return 0;
+}
+
+static int RenderBucket_DrawSplitPrimitiveLitTextureAtRange(struct RenderBucketDrawContext *ctx, u32 command, struct TextureLayout *tex, int activeRange,
+                                                            int depthMac0, const struct RenderBucketSplitVertex *v0, const struct RenderBucketSplitVertex *v1,
+                                                            const struct RenderBucketSplitVertex *v2)
+{
+	u_long *otEntry;
+	int signedTest;
+	u32 texWord0;
+	u32 texWord1;
+	u32 texWord2;
+	u32 codeWord;
+	u32 tpageMask;
+	POLY_FT3 *p;
+
+	if ((char *)ctx->primMem->curr + sizeof(POLY_FT3) >= (char *)ctx->primMem->endMin100)
+		return -1;
+
+	if (tex == 0)
+		return 0;
+
+	otEntry = RenderBucket_GetNormalOTEntry(activeRange, depthMac0);
+	if (otEntry == 0)
+		return 0;
+
+	RenderBucket_LoadSplitProjectedRegs(v0, v1, v2);
+	gte_nclip();
+	signedTest = MFC2_S(24) ^ ((s16)ctx->idpp->instFlags ^ (int)(command << 2));
+	if (signedTest < 0)
+		otEntry++;
+
+	texWord0 = RenderBucket_TextureWordWithSplitUv(*(u32 *)&tex->u0, v0->uv);
+	texWord1 = RenderBucket_TextureWordWithSplitUv(*(u32 *)&tex->u1, v1->uv);
+	texWord2 = RenderBucket_TextureWordWithSplitUv(*(u32 *)&tex->u2, v2->uv);
+
+	if ((texWord1 & 0x00600000U) != 0)
+	{
+		u32 otSide = RenderBucket_OTAddress(otEntry) << 3;
+
+		if ((s32)(otSide & (u32)signedTest) < 0)
+			return 0;
+
+		codeWord = 0x24000000;
+		tpageMask = 0x00600000;
+	}
+	else if (signedTest < 0)
+	{
+		codeWord = 0x24000000;
+		tpageMask = 0x00400000;
+	}
+	else
+	{
+		codeWord = 0x26000000;
+		tpageMask = 0x00200000;
+	}
+
+	// NOTE(aalhendi): Source-backs generated-split use of retail 0x8006c778:
+	// same side-dependent flat textured writer with generated SXY/UV/color.
+	p = ctx->primMem->curr;
+	*(u32 *)&p->r0 = codeWord | RenderBucket_LightFlatTextureColor(v0->color, signedTest);
+	RenderBucket_WriteSplitFT3(p, v0, v1, v2, texWord0, texWord1 | tpageMask, texWord2);
+
+	RenderBucket_LinkPrimRaw(otEntry, p, 0x07000000);
+	ctx->primMem->curr = (char *)p + 0x20;
+	return 0;
+}
+
+static int RenderBucket_DrawSplitPrimitiveAtRange(struct RenderBucketDrawContext *ctx, u32 command, struct TextureLayout *tex, int activeRange, int depthMac0,
+                                                  const struct RenderBucketSplitVertex *v0, const struct RenderBucketSplitVertex *v1,
+                                                  const struct RenderBucketSplitVertex *v2)
+{
+	u32 prim = (u32)(uintptr_t)ctx->inst->funcPtr[1];
+
+	// NOTE(aalhendi): Retail tail-calls Instance+0x60 from the generated split
+	// helpers. Native only claims the labels whose generated-UV ABI is modeled.
+	if (RenderBucket_SplitPrimitiveWriterSupported(ctx) == 0)
+	{
+#ifdef CTR_INTERNAL
+		if (CtrTireDebug_ShouldLog(CTR_TIREDBG_RENDERBUCKET_UNHANDLED) != 0)
+		{
+			fprintf(stderr, "[TIREDBG][rb-split-unhandled-prim-writer] inst=%p func=%p handler=%08x cmd=%08x depth=%d\n", (void *)ctx->inst,
+			        ctx->inst->funcPtr[1], (u32)ctx->idpp->unkEC, command, depthMac0);
+		}
+#endif
+		return 0;
+	}
+
+	if (prim == RB_RETAIL_INST_PRIM_DEPTH_FADE)
+		return RenderBucket_DrawSplitPrimitiveDepthFadeAtRange(ctx, command, tex, activeRange, depthMac0, v0, v1, v2);
+
+	if (prim == RB_RETAIL_INST_PRIM_KEY_TOKEN)
+		return RenderBucket_DrawSplitPrimitiveKeyRelicTokenAtRange(ctx, command, tex, activeRange, depthMac0, v0, v1, v2);
+
+	if (prim == RB_RETAIL_INST_PRIM_CLAMP_DEPTH)
+		return RenderBucket_DrawSplitPrimitiveNormalAtOTEntry(ctx, command, tex, RenderBucket_GetClampedOTEntry(ctx, activeRange, depthMac0), v0, v1, v2);
+
+	if (prim == RB_RETAIL_INST_PRIM_LIT_TEXTURE)
+		return RenderBucket_DrawSplitPrimitiveLitTextureAtRange(ctx, command, tex, activeRange, depthMac0, v0, v1, v2);
+
+	if (prim == RB_RETAIL_INST_PRIM_GHOST)
+		return RenderBucket_DrawSplitPrimitiveGhostAtRange(ctx, command, tex, activeRange, depthMac0, v0, v1, v2);
+
+	return RenderBucket_DrawSplitPrimitiveNormalAtOTEntry(ctx, command, tex, RenderBucket_GetNormalOTEntry(activeRange, depthMac0), v0, v1, v2);
+}
+
 static void RenderBucket_ProjectSplitVertex(struct RenderBucketDrawContext *ctx, struct RenderBucketSplitVertex *v)
 {
+	// NOTE(aalhendi): Source-backs retail generated-vertex SXY/SZ stores.
 	MTC2(v->xy, 0);
 	MTC2(v->z, 1);
 	gte_rtps();
@@ -2797,10 +3204,10 @@ static int RenderBucket_DrawSplitClipped(struct RenderBucketDrawContext *ctx, u3
 	if (c->splitDist < 0)
 		signMask |= 4;
 
-	// NOTE(aalhendi): Source-backs retail helper 0x8006b4c8's candidate-call
-	// order and scratch[0x3c]/scratch[0x40] range switching. Positive-side
-	// candidates still run through the retail guard shape, but return before
-	// emission just like helpers 0x8006b6ec/0x8006b754/0x8006b7bc/0x8006b7f4.
+	// NOTE(aalhendi): ASM-verified retail 0x8006b4c8-0x8006b968 candidate
+	// order and scratch[0x3c]/scratch[0x40] range switching. Native carries the
+	// scratch vertices as explicit structs, then dispatches through the current
+	// Instance+0x60 primitive writer.
 	switch (signMask)
 	{
 	case 0:
@@ -2917,6 +3324,7 @@ static int RenderBucket_ApplyWaterSplitSideSelector(struct RenderBucketDrawConte
 {
 	int selector;
 
+	// NOTE(aalhendi): Maps retail side-selector labels 0x8006d55c-0x8006d5b8.
 	switch ((u32)(uintptr_t)ctx->inst->funcPtr[2])
 	{
 	case RB_RETAIL_INST_FUNC2_SPLIT_BOTH_MASK:
@@ -2929,7 +3337,18 @@ static int RenderBucket_ApplyWaterSplitSideSelector(struct RenderBucketDrawConte
 		return 1;
 
 	case RB_RETAIL_INST_FUNC2_SPLIT_NEGATIVE:
-		return guardDist < 0;
+		if (guardDist >= 0)
+			return 0;
+
+		// NOTE(aalhendi): Retail 0x8006d588 also checks scratch[0x108],
+		// which reflection toggles per pass.
+		if (ctx->waterSplitSide >= 0)
+		{
+			v0->color = RenderBucket_WaterSplitShiftMaskColor(ctx, v0->color);
+			v1->color = RenderBucket_WaterSplitShiftMaskColor(ctx, v1->color);
+			v2->color = RenderBucket_WaterSplitShiftMaskColor(ctx, v2->color);
+		}
+		return 1;
 
 	case RB_RETAIL_INST_FUNC2_SPLIT_XOR:
 		return (guardDist ^ (s8)ctx->inst->unk53) >= 0;
@@ -3206,6 +3625,7 @@ static void RenderBucket_LoadSpecialMirroredRTPS(struct RenderBucketDrawContext 
 		// NOTE(aalhendi): Source-backs 0x8006bea8-0x8006beb4: when retail
 		// reuses the first original FIFO vertex, it also copies the previous
 		// mirrored SXY0/SZ1 scratch pair into the mirrored SXY1/SZ2 slot.
+		// Reflection repeats this at 0x8006ccf4-0x8006cd00.
 		ctx->specialMirrorRegs.sxy1 = ctx->specialMirrorRegs.sxy0;
 		ctx->specialMirrorRegs.sz2 = ctx->specialMirrorRegs.sz1;
 	}
@@ -3234,7 +3654,7 @@ static int RenderBucket_DrawSpecialMirroredPass(struct RenderBucketDrawContext *
 	ctx->tempColor[1] = (int)(((u32)savedColor1 >> shift) & mask);
 	ctx->tempColor[2] = (int)(((u32)savedColor2 >> shift) & mask);
 	ctx->tempColor[3] = (int)(((u32)savedColor3 >> shift) & mask);
-	ret = RenderBucket_DrawInstPrim_NormalAtRange(ctx, command, tex, ctx->idpp->unkE8, depthMac0);
+	ret = RenderBucket_DispatchDrawInstPrimAtRange(ctx, command, tex, ctx->idpp->unkE8, depthMac0);
 	ctx->tempColor[1] = savedColor1;
 	ctx->tempColor[2] = savedColor2;
 	ctx->tempColor[3] = savedColor3;
@@ -3273,10 +3693,70 @@ static int RenderBucket_DrawSpecialPrimitive(struct RenderBucketDrawContext *ctx
 	originalFlag = CFC2(31);
 	if (RenderBucket_CheckProjectedPrim(ctx, command, originalFlag, 0, &depthMac0) != 0)
 	{
-		if (RenderBucket_DrawInstPrim_NormalAtRange(ctx, command, tex, ctx->idpp->unkE4, depthMac0) < 0)
+		if (RenderBucket_DispatchDrawInstPrimAtRange(ctx, command, tex, ctx->idpp->unkE4, depthMac0) < 0)
 			return -1;
 	}
 
+	return 0;
+}
+
+static void RenderBucket_SwapActiveRanges(struct RenderBucketDrawContext *ctx)
+{
+	int range = ctx->idpp->unkE4;
+
+	ctx->idpp->unkE4 = ctx->idpp->unkE8;
+	ctx->idpp->unkE8 = range;
+}
+
+static int RenderBucket_DrawReflectionPrimitive(struct RenderBucketDrawContext *ctx, u32 command, int useRtps, int reuseFirstVertex, struct TextureLayout *tex)
+{
+	struct RenderBucketProjectedRegs originalRegs;
+	u32 mirrorFlag;
+	u32 originalFlag;
+	int depthMac0;
+	int savedWaterSplitSide = ctx->waterSplitSide;
+
+	if (useRtps != 0)
+		RenderBucket_LoadPrimRTPS(ctx, reuseFirstVertex);
+	else
+		RenderBucket_LoadPrimRTPT(ctx);
+
+	RenderBucket_StoreProjectedRegs(&originalRegs);
+	if (useRtps != 0)
+		RenderBucket_LoadSpecialMirroredRTPS(ctx, reuseFirstVertex);
+	else
+		RenderBucket_LoadSpecialMirroredRTPT(ctx);
+
+	mirrorFlag = CFC2(31);
+	RenderBucket_StoreProjectedRegs(&ctx->specialMirrorRegs);
+	RenderBucket_StoreSplitProjectedRegs(ctx);
+	RenderBucket_SwapActiveRanges(ctx);
+	ctx->waterSplitSide = 0;
+	if (RenderBucket_CheckProjectedPrim(ctx, command, mirrorFlag, 0x8000, &depthMac0) != 0)
+	{
+		if (RenderBucket_DrawWaterSplitClipped(ctx, command, tex, depthMac0) < 0)
+		{
+			RenderBucket_SwapActiveRanges(ctx);
+			ctx->waterSplitSide = savedWaterSplitSide;
+			return -1;
+		}
+	}
+	RenderBucket_SwapActiveRanges(ctx);
+
+	RenderBucket_LoadProjectedRegs(&originalRegs);
+	RenderBucket_StoreSplitProjectedRegs(ctx);
+	ctx->waterSplitSide = -1;
+	originalFlag = CFC2(31);
+	if (RenderBucket_CheckProjectedPrim(ctx, command, originalFlag, 0, &depthMac0) != 0)
+	{
+		if (RenderBucket_DrawWaterSplitClipped(ctx, command, tex, depthMac0) < 0)
+		{
+			ctx->waterSplitSide = savedWaterSplitSide;
+			return -1;
+		}
+	}
+
+	ctx->waterSplitSide = savedWaterSplitSide;
 	return 0;
 }
 
@@ -3371,11 +3851,108 @@ static void RenderBucket_DrawFunc_Special(struct RenderBucketDrawContext *ctx)
 	}
 }
 
+static void RenderBucket_DrawFunc_Reflection(struct RenderBucketDrawContext *ctx)
+{
+	u32 *pCmd = (u32 *)ctx->idpp->ptrCommandList;
+
+	// NOTE(aalhendi): Source-backs retail 0x8006c9c4's reflected split draw
+	// shape. The exact scratchpad/FIFO instruction choreography is still pending
+	// a direct ASM pass.
+	RenderBucket_CopyScratchColorCache(ctx);
+	pCmd++;
+
+	while (*pCmd != 0xffffffff)
+	{
+		u32 command = *pCmd++;
+		u16 flags = (command >> 24) & 0xff;
+		u16 stackIndex = (command >> 16) & 0xff;
+		int startsNewStrip;
+		int useRtps;
+		int reuseFirstVertex;
+		u32 drawCommand;
+		int color;
+		struct RenderBucketUncompressResult decoded;
+
+		if ((command >> 16) == 0)
+		{
+			RenderBucket_ApplyColorOnlyCommand(ctx, command);
+			continue;
+		}
+
+		decoded = RenderBucket_DispatchUncompressAnimationFrame(ctx, command, stackIndex);
+		color = decoded.color;
+		if ((flags & 4) == 0)
+			ctx->vertexIndex++;
+
+		ctx->tempCoords[0] = ctx->tempCoords[1];
+		ctx->tempCoords[1] = ctx->tempCoords[2];
+		ctx->tempCoords[2] = ctx->tempCoords[3];
+		ctx->tempCoords[3] = ctx->stack[stackIndex];
+		ctx->tempPacked[0] = ctx->tempPacked[1];
+		ctx->tempPacked[1] = ctx->tempPacked[2];
+		ctx->tempPacked[2] = ctx->tempPacked[3];
+		ctx->tempPacked[3] = decoded.packed;
+		ctx->tempSplit[0] = ctx->tempSplit[1];
+		ctx->tempSplit[1] = ctx->tempSplit[2];
+		ctx->tempSplit[2] = ctx->tempSplit[3];
+		RenderBucket_InitWaterSplitVertex(ctx, 3, ctx->tempPacked[3].xy, ctx->tempPacked[3].z, color);
+
+		ctx->tempColor[0] = ctx->tempColor[1];
+		ctx->tempColor[1] = ctx->tempColor[2];
+		ctx->tempColor[2] = ctx->tempColor[3];
+		ctx->tempColor[3] = color;
+
+		startsNewStrip = (flags & 0x80) != 0;
+		if ((startsNewStrip != 0) || (ctx->stripLength == 0))
+			ctx->primCommand = command;
+
+		if (startsNewStrip != 0)
+			ctx->stripLength = 0;
+
+		useRtps = ctx->stripLength > 2;
+		reuseFirstVertex = (useRtps != 0) && ((flags & 0x40) != 0);
+
+		if (reuseFirstVertex != 0)
+		{
+			ctx->tempCoords[1] = ctx->tempCoords[0];
+			ctx->tempPacked[1] = ctx->tempPacked[0];
+			ctx->tempSplit[1] = ctx->tempSplit[0];
+			ctx->tempColor[1] = ctx->tempColor[0];
+		}
+
+		if (ctx->stripLength < 2)
+		{
+			ctx->stripLength++;
+			continue;
+		}
+
+		drawCommand = (ctx->stripLength == 2) ? ctx->primCommand : command;
+
+		{
+			struct TextureLayout *tex;
+			int isValidTexture;
+
+			tex = RenderBucket_GetCommandTexture(ctx, drawCommand, &isValidTexture);
+			if (isValidTexture == 0)
+			{
+				ctx->stripLength++;
+				continue;
+			}
+
+			if (RenderBucket_DrawReflectionPrimitive(ctx, drawCommand, useRtps, reuseFirstVertex, tex) < 0)
+				return;
+		}
+
+		ctx->stripLength++;
+	}
+}
+
 static void RenderBucket_DrawFunc_Split(struct RenderBucketDrawContext *ctx)
 {
 	u32 *pCmd = (u32 *)ctx->idpp->ptrCommandList;
 
-	// NOTE(aalhendi): Source-backs retail 0x8006b030's water/mud split entry.
+	// NOTE(aalhendi): ASM-verified against NTSC-U 926 0x8006b030-0x8006b24c.
+	// The called water split helper at 0x8006d094 is audited separately.
 	RenderBucket_CopyScratchColorCache(ctx);
 	pCmd++;
 
@@ -3676,8 +4253,12 @@ static void RenderBucket_DispatchDrawFunc(struct RenderBucketDrawContext *ctx)
 		RenderBucket_DrawFunc_Special(ctx);
 		return;
 
+	case RB_RETAIL_DRAWFUNC_REFLECTION:
+		RenderBucket_DrawFunc_Reflection(ctx);
+		return;
+
 	default:
-		// TODO(aalhendi): Port the remaining split/reflection draw handlers.
+		// TODO(aalhendi): Port any newly observed draw handlers.
 		// Do not fall through to normal draw; that masks live retail handler rows.
 #ifdef CTR_INTERNAL
 		if (CtrTireDebug_ShouldLog(CTR_TIREDBG_RENDERBUCKET_UNHANDLED) != 0)
@@ -3743,6 +4324,7 @@ static int RenderBucket_PrepareDrawContext(struct RenderBucketDrawContext *ctx, 
 	ctx->mf = mf;
 	ctx->anim = anim;
 	ctx->vertData = MODELFRAME_GETVERT(mf);
+	ctx->waterSplitSide = -1;
 	if (idpp->ptrNextFrame != 0)
 		ctx->nextVertData = (char *)idpp->ptrNextFrame + mf->vertexOffset;
 	return 1;
