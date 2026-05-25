@@ -432,6 +432,7 @@ LAB_8004b0dc:
 
 	if (soundID != 0)
 	{
+		// NOTE(aalhendi): ASM-verified NTSC-U 926 0x8004b0dc-0x8004b0f8 for keyboard SFX lookup/play.
 		DECOMP_OtherFX_Play(data.soundIndexArray[soundID], 1);
 	}
 	gGT->typeCursorPosition = cursorPosition;
