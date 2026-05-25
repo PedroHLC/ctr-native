@@ -31,6 +31,7 @@ int DECOMP_LOAD_TenStages(struct GameTracker *gGT, int loadingStage, struct BigH
 	{
 	case 0:
 	{
+		// NOTE(aalhendi): ASM-verified NTSC-U 926 0x8003368c-0x80033698 for loading-start volume backup/XA pause.
 #ifndef REBUILD_PS1
 		if (!boolPlayMusicDuringLoading)
 		{
@@ -276,6 +277,7 @@ int DECOMP_LOAD_TenStages(struct GameTracker *gGT, int loadingStage, struct BigH
 	}
 	case 4:
 	{
+		// NOTE(aalhendi): ASM-verified NTSC-U 926 0x80033cf4-0x80033d04 for post-overlay music restart gate.
 		if (!boolPlayMusicDuringLoading)
 		{
 			DECOMP_Music_Restart();
@@ -331,6 +333,7 @@ int DECOMP_LOAD_TenStages(struct GameTracker *gGT, int loadingStage, struct BigH
 
 		if (!boolPlayMusicDuringLoading)
 		{
+			// NOTE(aalhendi): ASM-verified NTSC-U 926 0x80033eb8-0x80033ed0 for music stop/CSEQ stop/bank reload.
 			DECOMP_Music_Stop();
 			DECOMP_CseqMusic_StopAll();
 			DECOMP_Music_LoadBanks();
@@ -342,6 +345,7 @@ int DECOMP_LOAD_TenStages(struct GameTracker *gGT, int loadingStage, struct BigH
 	{
 		if (!boolPlayMusicDuringLoading)
 		{
+			// NOTE(aalhendi): ASM-verified NTSC-U 926 0x80033ef8-0x80033f14 for async bank parse and volume restore.
 			iVar9 = DECOMP_Music_AsyncParseBanks();
 
 			if (iVar9 == 0)
@@ -619,6 +623,7 @@ int DECOMP_LOAD_TenStages(struct GameTracker *gGT, int loadingStage, struct BigH
 		{
 			uVar16 = 7;
 		LAB_800346b0:
+			// NOTE(aalhendi): ASM-verified NTSC-U 926 0x80034694-0x800346b8 for post-load audio state selection.
 			DECOMP_Audio_SetState_Safe(uVar16);
 			return loadingStage + 1;
 		}
