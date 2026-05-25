@@ -1,5 +1,6 @@
 #include <common.h>
 
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x80030a50-0x80030aa8.
 // used for every explosion
 struct Instance *INSTANCE_BirthWithThread_Stack(int *spArr)
 {

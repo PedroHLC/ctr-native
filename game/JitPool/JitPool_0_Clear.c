@@ -1,15 +1,12 @@
 #include <common.h>
 
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x80030fdc-0x8003105c.
 void JitPool_Clear(struct JitPool *AP)
 {
 	int loopIndex;
-	u32 currSlot;
+	uintptr_t currSlot;
 
-#ifdef CTR_INTERNAL
-	fprintf(stderr, "JitPool_Clear: free=%d taken=%d max=%d itemSize=%d\n", AP->free.count, AP->taken.count, AP->maxItems, AP->itemSize);
-#endif
-
-	currSlot = (int)AP->ptrPoolData;
+	currSlot = (uintptr_t)AP->ptrPoolData;
 
 	// clear list of free and taken
 	LIST_Clear(&AP->free);

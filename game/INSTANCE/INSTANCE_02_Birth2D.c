@@ -1,43 +1,27 @@
 #include <common.h>
 
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x800308e4-0x800309a4.
 struct Instance *INSTANCE_Birth2D(struct Model *model, char *name, struct Thread *th)
 {
 	struct GameTracker *gGT = sdata->gGT;
+	struct Instance *inst;
+	struct InstDrawPerPlayer *idpp;
+	int i;
 
-	struct Instance *inst = INSTANCE_Birth3D(model, name, th);
+	inst = (struct Instance *)JitPool_Add(&gGT->JitPools.instance);
 
-	inst->flags |= 0x400;
+	if (inst != NULL)
+	{
+		INSTANCE_Birth(inst, model, name, th, 0x40f);
+	}
 
-	struct InstDrawPerPlayer *idpp = INST_GETIDPP(inst);
-
-#ifndef REBUILD_PS1
+	idpp = INST_GETIDPP(inst);
 	idpp[0].pushBuffer = &gGT->pushBuffer_UI;
-#else
-	idpp[0].pushBuffer = &gGT->pushBuffer[0];
-#endif
 
-	for (int i = 1; i < gGT->numPlyrCurrGame; i++)
+	for (i = 1; i < gGT->numPlyrCurrGame; i++)
 	{
 		idpp[i].pushBuffer = 0;
 	}
 
 	return inst;
-
-	// attempt at 1-1 ghidra (but the above impl is probably correct)
-	// struct GameTracker* gGT = sdata->gGT;
-	// struct Instance* inst = (struct Instance*)JitPool_Add(gGT->JitPools.instance);
-	// if (inst != NULL)
-	//{
-	//	INSTANCE_Birth(inst, model, name, th, 0x40f);
-	// }
-	// struct InstDrawPerPlayer* idpp = INST_GETIDPP(inst);
-	// #ifndef REBUILD_PS1
-	// idpp[0].pushBuffer = &gGT->pushBuffer_UI;
-	// #else
-	// idpp[0].pushBuffer = &gGT->pushBuffer[0];
-	// #endif
-	// for(int i = 1; i < gGT->numPlyrCurrGame; i++)
-	//{
-	//	idpp[i].pushBuffer = 0;
-	// }
 }
