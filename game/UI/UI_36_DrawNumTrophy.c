@@ -1,5 +1,6 @@
 #include <common.h>
 
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x80051070-0x8005111c.
 void UI_DrawNumTrophy(s16 posX, s16 posY)
 {
 	int num;

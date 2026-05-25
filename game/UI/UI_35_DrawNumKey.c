@@ -1,5 +1,6 @@
 #include <common.h>
 
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x80050fc4-0x80051070.
 void UI_DrawNumKey(s16 posX, s16 posY)
 {
 	int num;
