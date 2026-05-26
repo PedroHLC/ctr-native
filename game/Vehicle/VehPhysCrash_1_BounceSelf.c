@@ -8,7 +8,7 @@ static int VehPhysCrash_BounceSelf_Div6Shift9(int value)
 	return (high >> 9) - (value >> 31);
 }
 
-// NOTE(aalhendi): ASM-verified NTSC-U 926 0x8005cf64-0x8005d0d0
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x8005cf64-0x8005d0d0.
 int VehPhysCrash_BounceSelf(s16 *normal, Vec3 *origin, Vec3 *vel, int boolOtherDriver)
 {
 	int diffX = vel->x - origin->x;

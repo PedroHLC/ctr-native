@@ -1,6 +1,6 @@
 #include <common.h>
 
-// NOTE(aalhendi): ASM-verified NTSC-U 926 0x8005d0d0-0x8005d218
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x8005d0d0-0x8005d218.
 void VehPhysCrash_AI(struct Driver *bot, Vec3 *vel)
 {
 	sdata->unk_rot[0] = (s16)((u16)bot->botData.botNavFrame->rot[0] << 4);
