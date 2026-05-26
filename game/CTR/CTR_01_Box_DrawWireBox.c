@@ -11,6 +11,7 @@ void CTR_Box_DrawWireBox(RECT *r, const Color *color, void *ot, struct PrimMem *
 	primMem->curr = p + 1;
 
 	const PrimCode primCode = {.line = {.renderCode = RenderCode_Line, .polyline = 1}};
+	p->tag.size = (sizeof(*p) - sizeof(p->tag)) / sizeof(u32);
 	p->colorCode = *color;
 	p->colorCode.code = primCode;
 
@@ -34,6 +35,7 @@ void CTR_Box_DrawWireBox(RECT *r, const Color *color, void *ot, struct PrimMem *
 	}
 	primMem->curr = p + 1;
 
+	p->tag.size = (sizeof(*p) - sizeof(p->tag)) / sizeof(u32);
 	p->colorCode = *color;
 	p->colorCode.code = primCode;
 	p->v[0].pos.x = topX;
