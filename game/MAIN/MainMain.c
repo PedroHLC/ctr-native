@@ -56,11 +56,9 @@ u32 main(void)
 
 			ElimBG_Deactivate(gGT);
 
-#ifndef REBUILD_PS1
 			MainStats_RestartRaceCountLoss();
 			// NOTE(aalhendi): ASM-verified NTSC-U 926 0x8003c9f8-0x8003ca04 for load-complete voiceline reset.
 			Voiceline_ClearTimeStamp();
-#endif
 
 			// Disable End-Of-Race menu
 			gGT->gameMode1 &= ~END_OF_RACE;

@@ -1,7 +1,7 @@
 #include <common.h>
 
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x8003d068-0x8003d184.
 void MainStats_RestartRaceCountLoss(void)
-
 {
 	int index;
 	char *countPtr;

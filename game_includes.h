@@ -397,6 +397,7 @@
 #include "game/MAIN/MainGameEnd_01_SoloRaceSaveHighScore.c"
 #include "game/MAIN/MainGameEnd_02_Initialize.c"
 #include "game/MAIN/MainStats_00_ClearBattleVS.c"
+#include "game/MAIN/MainStats_01_RestartRaceCountLoss.c"
 
 #include "game/MAIN/MainRaceTrack_00_StartLoad.c"
 #include "game/MAIN/MainRaceTrack_01_RequestLoad.c"
