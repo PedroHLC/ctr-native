@@ -998,7 +998,7 @@ int LOAD_Robots2P(int p1, int p2);
 void ElimBG_SaveScreenshot_Chunk(u16 *param_1, u16 *param_2, int param_3);
 void ElimBG_ToggleInstance(struct Instance *inst, char boolGameIsPaused);
 void ElimBG_ToggleAllInstances(struct GameTracker *gGT, int boolGameIsPaused);
-void INSTANCE_LevDelayedLInBs(struct Instance *instDefs, u32 numInstances);
+void INSTANCE_LevDelayedLInBs(struct InstDef *instDef, int numInstances);
 void CAM_ThTick(struct Thread *t);
 void FLARE_Init(s16 *pos);
 void DotLights_AudioAndVideo(struct GameTracker *gGT);

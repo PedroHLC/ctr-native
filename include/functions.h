@@ -458,7 +458,7 @@ struct Instance *INSTANCE_BirthWithThread(int modelID, char *name, int poolType,
 struct Instance *INSTANCE_BirthWithThread_Stack(int *spArr);
 void INSTANCE_Death(struct Instance *inst);
 void INSTANCE_LevInitAll(struct InstDef *instDef, int num);
-void INSTANCE_LevDelayedLInBs(struct Instance *instDefs, u32 numInstances);
+void INSTANCE_LevDelayedLInBs(struct InstDef *instDef, int numInstances);
 
 // not really part of "INSTANCE" namespace
 u32 VehFrameInst_GetNumAnimFrames(struct Instance *inst, int animIndex);

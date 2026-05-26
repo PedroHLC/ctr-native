@@ -651,9 +651,7 @@ void RenderAllHUD(struct GameTracker *gGT)
 					{
 						gGT->overlayTransition = 0;
 
-#ifndef REBUILD_PS1
 						INSTANCE_LevDelayedLInBs(gGT->level1->ptrInstDefs, gGT->level1->numInstances);
-#endif
 
 						// allow instances again
 						gGT->gameMode2 &= ~(NO_LEV_INSTANCE);

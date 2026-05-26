@@ -1,14 +1,15 @@
 #include <common.h>
 
-void INSTANCE_LevDelayedLInBs(struct Instance *instDefs, u32 numInstances)
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x80030ed4-0x80030f58.
+void INSTANCE_LevDelayedLInBs(struct InstDef *instDef, int numInstances)
 {
-	struct InstDef *id = instDefs->instDef;
-	for (u32 i = 0; i < numInstances; i++)
+	for (int i = 0; i < numInstances; i++)
 	{
-		int *puVar2 = (int *)id;
-		void *asdf = COLL_LevModelMeta((int)*(s16 *)(puVar2[-7] + 0x10));
-		if (asdf != NULL && *(int *)(asdf + 16) != (int)NULL) // if pointer is not nullptr && if LInB
-			((void (*)(struct InstDef *))(asdf + 16))(id);    // execute LInB for this instance
-		id++;                                                 // next InstDef
+		struct MetaDataMODEL *meta = COLL_LevModelMeta(instDef->model->id);
+
+		if ((meta != NULL) && (meta->LInB != NULL))
+			meta->LInB(instDef->ptrInstance);
+
+		instDef++;
 	}
 }

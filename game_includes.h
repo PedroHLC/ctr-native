@@ -345,6 +345,7 @@
 #include "game/INSTANCE/INSTANCE_04_BirthWithThread_Stack.c"
 #include "game/INSTANCE/INSTANCE_05_Death.c"
 #include "game/INSTANCE/INSTANCE_06_LevInitAll.c"
+#include "game/INSTANCE/INSTANCE_07_LevDelayedLInBs.c"
 #include "game/INSTANCE/INSTANCE_08_GetNumAnimFrames.c"
 
 #include "game/LHMatrix/LHMatrix_0_Parent.c"
