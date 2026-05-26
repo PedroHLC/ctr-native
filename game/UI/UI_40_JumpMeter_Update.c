@@ -63,13 +63,11 @@ void UI_JumpMeter_Update(struct Driver *d)
 	// if player is in the air
 	else
 	{
-#if !defined(REBUILD_PS1) || defined(CTR_NATIVE)
 		if ((0x480 < d->jump_LandingBoost) && (d->jumpMeter < 0x481))
 		{
 			// Make driver talk
 			Voiceline_RequestPlay(7, data.characterIDs[d->driverID], 0x10);
 		}
-#endif
 
 		// Jump meter = 0x3FC
 		d->jumpMeter = d->jump_LandingBoost;

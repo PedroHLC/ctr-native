@@ -902,7 +902,7 @@ void UI_DrawLapCount(s16 posX, int posY, int param_3, struct Driver *d);
 void UI_DrawBattleScores(int, int, struct Driver *);
 void UI_Weapon_DrawSelf(s16, s16, s16, struct Driver *);
 void UI_Weapon_DrawBG(s16 param_1, s16 param_2, s16 param_3, struct Driver *d);
-void UI_DrawNumWumpa(int param_1, int param_2, struct Driver *d);
+void UI_DrawNumWumpa(s16 posX, s16 posY, struct Driver *d);
 void UI_DrawNumTimebox(int posX, int posY, struct Driver *d);
 void UI_DrawNumRelic(int posX, int posY);
 void UI_DrawNumKey(int posX, int posY);
