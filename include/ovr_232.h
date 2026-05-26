@@ -30,8 +30,8 @@ struct AdvPause {
 enum WoodDoorCamFlags
 {
 	WdCam_FlyingOut = 1,
-	WdCam_FullyOut = 2, // unused
-	WdCam_FlyingIn = 4, // unused
+	WdCam_FullyOut = 2,
+	WdCam_FlyingIn = 4,
 	WdCam_CutscenePlaying = 0x10
 };
 

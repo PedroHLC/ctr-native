@@ -191,10 +191,28 @@ void AH_Door_ThTick(struct Thread *t)
 
 	// == door is closed, ready to unlock ==
 
-	// if camera is not transitioning out (yet),
-	// while keys are spinning in air (4 seconds)
-	if ((door->camFlags & WdCam_FlyingOut) == 0)
+	if ((door->camFlags & WdCam_FlyingOut) != 0)
 	{
+		door->camTimer_unused = 0x3c;
+
+		if (((cDC->flags & 0x200) == 0) && ((door->camFlags & WdCam_FlyingIn) == 0))
+		{
+			driver->funcPtrs[0] = VehPhysProc_Driving_Init;
+			door->camFlags |= WdCam_FlyingIn;
+		}
+		else if (((cDC->flags & 0x800) != 0) && ((door->camFlags & WdCam_FullyOut) == 0))
+		{
+			door->camFlags |= WdCam_FullyOut;
+		}
+	}
+	else
+	{
+		if (door->camTimer_unused != 0)
+		{
+			door->camTimer_unused--;
+			return;
+		}
+
 		// If the game is paused
 		if ((gGT->gameMode1 & 0xf) != 0)
 		{
@@ -508,7 +526,7 @@ void AH_Door_ThTick(struct Thread *t)
 	driver->funcPtrs[0] = VehPhysProc_Driving_Init;
 
 	// cutscene over
-	door->camFlags &= ~(0x10);
+	door->camFlags = (door->camFlags & ~WdCam_CutscenePlaying) | WdCam_FlyingIn;
 
 	// bring HUD back
 	gGT->hudFlags = (char)door->hudFlags;
