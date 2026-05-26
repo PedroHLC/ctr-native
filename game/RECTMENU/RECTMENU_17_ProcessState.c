@@ -1,11 +1,6 @@
 #include <common.h>
 
-/*
-easy way to fix the menu storage bug
-Top half is checking for a new menu, bottom half is updating menu logic,
-just reverse the order of the function, and it's fixed
-*/
-
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x8004680c-0x80046990.
 void RECTMENU_ProcessState()
 {
 	struct RectMenu *currMenu;
