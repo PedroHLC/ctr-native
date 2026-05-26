@@ -16,7 +16,7 @@ void *PlayerSpinningFuncTable[0xD] = {VehPhysProc_SpinFirst_InitSetUpdate,
                                       VehFrameProc_Spinning,
                                       VehEmitter_DriverMain};
 
-// NOTE(aalhendi): ASM-verified NTSC-U 926 0x80063ec0-0x8006402c
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x80063ec0-0x8006402c.
 void VehPhysProc_SpinFirst_Init(struct Thread *t, struct Driver *d)
 {
 	int i;
@@ -27,7 +27,7 @@ void VehPhysProc_SpinFirst_Init(struct Thread *t, struct Driver *d)
 	d->unk_LerpToForwards = 0;
 	d->turbo_MeterRoomLeft = 0;
 
-	if (LOAD_IsOpen_RacingOrBattle())
+	if (LOAD_IsOpen_RacingOrBattle() && ((sdata->gGT->gameMode1 & ADVENTURE_ARENA) == 0))
 	{
 		RB_Player_ModifyWumpa(d, -1);
 	}
