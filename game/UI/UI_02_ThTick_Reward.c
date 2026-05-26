@@ -2,6 +2,7 @@
 
 // Draw various objects, like relic,
 // key trophy, token, crystal, etc
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x8004c850-0x8004c914.
 void UI_ThTick_Reward(struct Thread *bucket)
 
 {

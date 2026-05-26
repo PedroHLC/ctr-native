@@ -1,6 +1,7 @@
 #include <common.h>
 
 // Handle CTR letters in HUD
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x8004c914-0x8004ca04.
 void UI_ThTick_CtrLetters(struct Thread *bucket)
 
 {
