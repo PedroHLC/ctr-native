@@ -1642,9 +1642,8 @@ static int DrawLevelOvr1P_EmitRenderedClippedPolygonBridgeAtOt(struct PushBuffer
 {
 	(void)primMem;
 
-	// TODO(aalhendi): Replace this writer-side bridge with the exact retail
-	// 0x800a4dcc/0x800a4e70 record writers. The 0x800aa790 consumer is modeled
-	// separately by DrawLevelOvr1P_ConsumeClipRecords.
+	// NOTE(aalhendi): Retail 0x800a4dcc/0x800a4e70 writes this clipped-record
+	// shape after the local source-window probe; 0x800aa790 consumes it later.
 	return DrawLevelOvr1P_WriteRenderedClippedRecordAtOt(pb, block, projected, indices, count, faceIndex, texture, otIndexOverride);
 }
 
