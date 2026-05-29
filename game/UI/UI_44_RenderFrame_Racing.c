@@ -3,6 +3,8 @@
 // To do: add a header
 void AA_EndEvent_DisplayTime(s16, s16);
 
+// NOTE(aalhendi): ASM-verified NTSC-U 926 0x80052f98-0x80054298.
+// CTR_NATIVE only adds an ST1 map-metadata null guard below.
 void UI_RenderFrame_Racing()
 {
 	s16 sVar1;
