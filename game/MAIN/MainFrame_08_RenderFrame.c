@@ -211,13 +211,13 @@ void MainFrame_RenderFrame(struct GameTracker *gGT, struct GamepadSystem *gGamep
 		    (sdata->Loading.stage != -4))
 		{
 			DotLights_AudioAndVideo(gGT);
+		}
 
-			if ((gGT->renderFlags & 0x8000) != 0)
-			{
-				WindowBoxLines(gGT);
+		if ((gGT->renderFlags & 0x8000) != 0)
+		{
+			WindowBoxLines(gGT);
 
-				WindowDivsionLines(gGT);
-			}
+			WindowDivsionLines(gGT);
 		}
 
 #if !defined(REBUILD_PS1)
