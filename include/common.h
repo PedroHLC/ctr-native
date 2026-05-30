@@ -81,11 +81,7 @@
 #include <ovr_233.h>
 #include <regionsEXE.h>
 
-#ifndef CTR_NATIVE
 #include <functions.h>
-#endif
-
-#include <decomp_functions.h>
 #include <gpu.h>
 
 #endif
