@@ -436,8 +436,7 @@
 
 #include "game/MEMCARD/MEMCARD_00_SetIcon.c"
 #include "game/MEMCARD/MEMCARD_01_CRC16.c"
-// NOTE(aalhendi): CTR_NATIVE keeps host-compatible card directory stubs;
-// non-native builds use the retail card directory functions below.
+// NOTE(aalhendi): CTR_NATIVE routes host-backed card operations through MEMCARD_Compat; non-native builds use the retail card functions below.
 #if defined(CTR_NATIVE)
 #include "game/MEMCARD/MEMCARD_Compat.c"
 #else
@@ -463,9 +462,13 @@
 #include "game/MEMCARD/MEMCARD_13_CloseFile.c"
 #include "game/MEMCARD/MEMCARD_14_ReadFile.c"
 #include "game/MEMCARD/MEMCARD_15_WriteFile.c"
+#if !defined(CTR_NATIVE)
 #include "game/MEMCARD/MEMCARD_17_HandleEvent.c"
+#endif
+#if !defined(CTR_NATIVE)
 #include "game/MEMCARD/MEMCARD_19_Load.c"
 #include "game/MEMCARD/MEMCARD_20_Save.c"
+#endif
 
 #include "game/MEMPACK/MEMPACK_00_Init.c"
 #include "game/MEMPACK/MEMPACK_01_SwapPacks.c"

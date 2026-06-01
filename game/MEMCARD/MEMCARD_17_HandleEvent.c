@@ -104,11 +104,11 @@ int MEMCARD_HandleEvent(void)
 			if ((((sdata->memcardIconSize + sdata->memcardFileSize + 0x1fff) >> 13) < sdata->memcard_ptrStart[3]) &&
 			    (((sdata->memcardIconSize + sdata->memcardFileSize * 2 + 0x1fff) >> 13) >= 2))
 			{
-				sdata->memcardStatusFlags &= ~4;
+				sdata->memcardStatusFlags &= ~MEMCARD_STATUS_NO_BACKUP_COPY;
 			}
 			else
 			{
-				sdata->memcardStatusFlags |= 4;
+				sdata->memcardStatusFlags |= MEMCARD_STATUS_NO_BACKUP_COPY;
 			}
 
 			return event;
@@ -136,7 +136,7 @@ int MEMCARD_HandleEvent(void)
 			sdata->crc16_checkpoint_status = 0;
 			sdata->memcard_stage++;
 
-			if ((sdata->memcardStatusFlags & 8) == 0)
+			if ((sdata->memcardStatusFlags & MEMCARD_STATUS_SYNC_CHECKSUM) == 0)
 				return MC_RETURN_PENDING;
 
 			goto ChecksumLoad;
@@ -167,7 +167,7 @@ int MEMCARD_HandleEvent(void)
 
 			stage = sdata->memcard_stage;
 
-			if (((sdata->memcardStatusFlags & 4) == 0) && (stage < MC_STAGE_LOAD_PART5_CHECK))
+			if (((sdata->memcardStatusFlags & MEMCARD_STATUS_NO_BACKUP_COPY) == 0) && (stage < MC_STAGE_LOAD_PART5_CHECK))
 			{
 				sdata->memcard_stage = stage + 1;
 				return MEMCARD_ReadFile(sdata->memcardIconSize + (stage - MC_STAGE_LOAD_PART0_START) * sdata->memcardFileSize, sdata->memcardFileSize);
@@ -186,7 +186,8 @@ int MEMCARD_HandleEvent(void)
 		{
 			stage = sdata->memcard_stage;
 
-			if ((stage != MC_STAGE_SAVE_PART0_START) && ((stage > MC_STAGE_SAVE_PART1_ICON) || ((sdata->memcardStatusFlags & 4) != 0)))
+			if ((stage != MC_STAGE_SAVE_PART0_START) &&
+			    ((stage > MC_STAGE_SAVE_PART1_ICON) || ((sdata->memcardStatusFlags & MEMCARD_STATUS_NO_BACKUP_COPY) != 0)))
 			{
 				MEMCARD_CloseFile();
 				MEMCARD_GetFreeBytes(sdata->memcardSlot);

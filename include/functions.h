@@ -403,8 +403,8 @@ char *MEMCARD_FindFirstGhost(int slotIdx, char *srcString);
 char *MEMCARD_FindNextGhost(void);
 u8 MEMCARD_EraseFile(int slotIdx, char *srcString);
 int MEMCARD_HandleEvent(void);
-u8 MEMCARD_Load(int slotIdx, char *name, u8 *ptrMemcard, int memcardFileSize, u32 param5);
-u8 MEMCARD_Save(int slotIdx, char *name, char *icon, u8 *ptrMemcard, int memcardFileSize, u32 flags);
+u8 MEMCARD_Load(int slotIdx, char *name, u8 *ptrMemcard, int memcardFileSize, u32 loadFlags);
+u8 MEMCARD_Save(int slotIdx, char *name, char *icon, u8 *ptrMemcard, int memcardFileSize, u32 saveFlags);
 
 void RaceConfig_LoadGameOptions(void);
 void RaceConfig_SaveGameOptions(void);

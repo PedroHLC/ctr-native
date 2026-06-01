@@ -8,7 +8,7 @@ int MEMCARD_ChecksumLoad(u8 *saveBytes, int len)
 	int boolFinishThisFrame;
 	int crc = sdata->crc16_checkpoint_status;
 
-	if ((sdata->memcardStatusFlags & 8) == 0)
+	if ((sdata->memcardStatusFlags & MEMCARD_STATUS_SYNC_CHECKSUM) == 0)
 	{
 		byteIndexEnd = byteIndex + 0x200;
 		boolFinishThisFrame = 0;

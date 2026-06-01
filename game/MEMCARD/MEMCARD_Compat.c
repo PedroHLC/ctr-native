@@ -1,20 +1,11 @@
 #include <common.h>
-
-static char *MEMCARD_NativePath(char *save_name)
-{
-	if (strncmp(save_name, "bu00:", 5) == 0)
-		return save_name + 5;
-
-	if (strncmp(save_name, "bu01:", 5) == 0)
-		return save_name + 5;
-
-	return save_name;
-}
+#include <platform/native_memcard.h>
 
 static u8 s_memcardNativeInfoSeen[2];
 
-// NOTE(aalhendi): ctr-native stubs host-unsupported card directory ops here;
-// the retail implementations live in MEMCARD_16/18/21-25 and are not included.
+// NOTE(aalhendi): ctr-native adapts host-backed card operations here; the
+// retail implementations stay in their numbered MEMCARD files for non-native
+// builds.
 void MEMCARD_GetFreeBytes(int slotIdx)
 {
 	(void)slotIdx;
@@ -46,18 +37,9 @@ u8 MEMCARD_Format(int slotIdx)
 
 int MEMCARD_IsFile(int slotIdx, char *save_name)
 {
-	FILE *file;
-	char *path;
-
 	(void)slotIdx;
 
-	path = MEMCARD_NativePath(save_name);
-	file = fopen(path, "rb");
-	if (file == NULL)
-		return MC_RETURN_NODATA;
-
-	fclose(file);
-	return MC_RETURN_IOE;
+	return NativeMemcard_FileExists(save_name) ? MC_RETURN_IOE : MC_RETURN_NODATA;
 }
 
 char *MEMCARD_FindFirstGhost(int slotIdx, char *srcString)
@@ -74,9 +56,61 @@ char *MEMCARD_FindNextGhost(void)
 
 u8 MEMCARD_EraseFile(int slotIdx, char *srcString)
 {
-	char *path;
+	(void)slotIdx;
+	return NativeMemcard_RemoveFile(srcString) == NATIVE_MEMCARD_OK ? MC_RETURN_IOE : MC_RETURN_NODATA;
+}
+
+int MEMCARD_HandleEvent(void)
+{
+	// Native MEMCARD operations complete synchronously in this adapter. If the
+	// retail polling path reaches here, report a timeout instead of touching PSX
+	// card event APIs.
+	return MC_RETURN_TIMEOUT;
+}
+
+u8 MEMCARD_Load(int slotIdx, char *name, u8 *ptrMemcard, int memcardFileSize, u32 loadFlags)
+{
+	enum NativeMemcardResult nativeResult;
+	int checksumResult;
 
 	(void)slotIdx;
-	path = MEMCARD_NativePath(srcString);
-	return remove(path) == 0 ? MC_RETURN_IOE : MC_RETURN_NODATA;
+	(void)loadFlags;
+
+	nativeResult = NativeMemcard_ReadSaveData(name, ptrMemcard, memcardFileSize, 0x100);
+	if (nativeResult == NATIVE_MEMCARD_NOT_FOUND)
+		return MC_RETURN_NODATA;
+
+	if (nativeResult != NATIVE_MEMCARD_OK)
+		return MC_RETURN_TIMEOUT;
+
+	sdata->crc16_checkpoint_byteIndex = 0;
+	sdata->crc16_checkpoint_status = 0;
+	do
+	{
+		checksumResult = MEMCARD_ChecksumLoad(ptrMemcard, memcardFileSize);
+	} while (checksumResult == MC_RETURN_PENDING);
+
+	return checksumResult == MC_RETURN_IOE ? MC_RETURN_IOE : MC_RETURN_TIMEOUT;
+}
+
+u8 MEMCARD_Save(int slotIdx, char *name, char *icon, u8 *ptrMemcard, int memcardFileSize, u32 saveFlags)
+{
+	enum NativeMemcardResult nativeResult;
+
+	(void)slotIdx;
+	(void)icon;
+	(void)saveFlags;
+
+	sdata->crc16_checkpoint_byteIndex = 0;
+	sdata->crc16_checkpoint_status = 0;
+	MEMCARD_ChecksumSave(ptrMemcard, memcardFileSize);
+
+	nativeResult = NativeMemcard_WriteSaveData(name, &data.memcardIcon_Ghost[0], 0x100, ptrMemcard, memcardFileSize);
+	if (nativeResult == NATIVE_MEMCARD_OPEN_FAILED)
+		return MC_RETURN_FULL;
+
+	if (nativeResult != NATIVE_MEMCARD_OK)
+		return MC_RETURN_TIMEOUT;
+
+	return MC_RETURN_IOE;
 }
