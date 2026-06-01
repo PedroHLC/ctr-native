@@ -13,6 +13,7 @@ enum Ovr228DrawLevelConstants
 	OVR228_SPLIT_GROUND_LIST_B_HANDLER = 0x800a4768,
 	OVR228_SPLIT_GROUND_RENDERED_B_HANDLER = 0x800a55f8,
 	OVR228_WIDE_DYNAMIC_HANDLER = 0x800a65a8,
+	OVR228_QUAD_4X4_RENDERED_HANDLER = 0x800a71fc,
 	OVR228_WATER_RENDERED_DEFAULT_WRAPPER = 0x800a2224,
 	OVR228_WATER_BSP_LIST_PRIM_RESERVE_BIAS = 0x1040,
 	OVR228_SPLIT_GROUND_LIST_B_PRIM_RESERVE_BIAS = 0x16c0,
@@ -20,10 +21,12 @@ enum Ovr228DrawLevelConstants
 	OVR228_SPLIT_GROUND_LIST_B_SETUP_INDEX = 4,
 	OVR228_SPLIT_GROUND_RENDERED_B_SETUP_INDEX = 5,
 	OVR228_WIDE_DYNAMIC_SETUP_INDEX = 6,
+	OVR228_QUAD_4X4_RENDERED_SETUP_INDEX = 7,
 	OVR228_CANONICAL_GROUND_4X2_LIST_SETUP_INDEX = 5,
 	OVR228_CANONICAL_GROUND_4X2_RENDERED_SETUP_INDEX = 6,
 	OVR228_CANONICAL_DYNAMIC_RENDERED_SETUP_INDEX = 8,
 	OVR228_CANONICAL_WIDE_DYNAMIC_SETUP_INDEX = 9,
+	OVR228_CANONICAL_QUAD_4X4_RENDERED_SETUP_INDEX = 10,
 };
 
 static const struct OverlayRDATA_228_BucketSetupRecord *Ovr228_800a0fb8_FindBucketSetupRecord(u32 setupAddress, int *setupIndex)
@@ -72,6 +75,8 @@ static u32 Ovr228_800a0fb8_TranslateCopiedWord(int setupIndex, const struct Over
 		canonicalSetupIndex = OVR228_CANONICAL_GROUND_4X2_RENDERED_SETUP_INDEX;
 	else if (setupIndex == OVR228_WIDE_DYNAMIC_SETUP_INDEX)
 		canonicalSetupIndex = OVR228_CANONICAL_WIDE_DYNAMIC_SETUP_INDEX;
+	else if (setupIndex == OVR228_QUAD_4X4_RENDERED_SETUP_INDEX)
+		canonicalSetupIndex = OVR228_CANONICAL_QUAD_4X4_RENDERED_SETUP_INDEX;
 	else
 		return value;
 
@@ -283,7 +288,14 @@ static int Ovr228_800a65a8_DrawWideDynamicList(void *bucketValue, struct PushBuf
 	return Ovr226_800a8b60_DrawWideDynamicBspList((struct VisMemBspListNode *)bucketValue, pb, mesh, primMem, visFaceList);
 }
 
-static int Ovr228_800a10c4_800a71fc_BucketDispatch(u32 handlerAddress, void *bucketValue, struct PushBuffer *pb, struct mesh_info *mesh,
+static int Ovr228_800a71fc_DrawQuad4x4RenderedList(void *bucketValue, struct PushBuffer *pb, struct mesh_info *mesh, struct PrimMem *primMem)
+{
+	DrawLevelOvr1P_SetPrimReserveBias(OVR228_WATER_BSP_LIST_PRIM_RESERVE_BIAS);
+	DrawLevelOvr1P_SetSplitGroundThresholdScratch();
+	return Ovr226_800a97c8_DrawQuad4x4RenderedList((struct QuadBlock **)bucketValue, pb, mesh, primMem);
+}
+
+static int Ovr228_800a10c4_800a81bc_BucketDispatch(u32 handlerAddress, void *bucketValue, struct PushBuffer *pb, struct mesh_info *mesh,
                                                    struct PrimMem *primMem, const int *visFaceList)
 {
 	if (handlerAddress == OVR228_WATER_BSP_LIST_HANDLER)
@@ -307,7 +319,10 @@ static int Ovr228_800a10c4_800a71fc_BucketDispatch(u32 handlerAddress, void *buc
 	if (handlerAddress == OVR228_WIDE_DYNAMIC_HANDLER)
 		return Ovr228_800a65a8_DrawWideDynamicList(bucketValue, pb, mesh, primMem, visFaceList);
 
-	// NOTE(aalhendi): Bucket families outside 0x800a10c4..0x800a71fc remain
+	if (handlerAddress == OVR228_QUAD_4X4_RENDERED_HANDLER)
+		return Ovr228_800a71fc_DrawQuad4x4RenderedList(bucketValue, pb, mesh, primMem);
+
+	// NOTE(aalhendi): Bucket families outside 0x800a10c4..0x800a81bc remain
 	// unported. Fail closed if this audit-only entry reaches them.
 	return 0;
 }
@@ -398,5 +413,5 @@ int Ovr228_800a0cbc_Entry(void *LevRenderList, struct PushBuffer *pb, struct BSP
                           void *VisMem18, void *waterEnvMap)
 {
 	return Ovr228_800a0cbc_EntryWithCallbacks(LevRenderList, pb, bspList, primMem, VisMem10, VisMem14, VisMem18, waterEnvMap,
-	                                          Ovr228_800a10c4_800a71fc_BucketDispatch, Ovr228_UnportedClipConsumer);
+	                                          Ovr228_800a10c4_800a81bc_BucketDispatch, Ovr228_UnportedClipConsumer);
 }
