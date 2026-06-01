@@ -495,50 +495,54 @@ int LOAD_TenStages(struct GameTracker *gGT, int loadingStage, struct BigHeader *
 		// that does NOT overwrite the hub VRAM
 		iVar9 = LOAD_GetAdvPackIndex() - 1;
 
+		// NOTE(aalhendi): Retail gates stage advancement until
+		// LOAD_Callback_Podiums runs after the final podium file.
+		sdata->load_inProgress = 1;
+
 		// VRAM for podium and all related models
 		LOAD_AppendQueue(0, LT_VRAM, BI_PODIUMVRMS + iVar9, NULL, NULL);
 
-		// podium first place
+		int fileIndex;
 		u8 *ptrIndexArr = &gGT->podium_modelIndex_First;
 		int *ptrModelPtrArr = &data.podiumModel_firstPlace;
-		int baseIndexPM = BI_DANCEMODELWIN;
+		void (*setPtrCb)(struct LoadQueueSlot *) = (void (*)(struct LoadQueueSlot *))-2;
 
-		// Fix for Oxide (faster than OG code that does nothing)
-		// If Oxide WIN is requested, add 16 to load Oxide LOSE
-		if (ptrIndexArr[0] == 0x8d)
-			baseIndexPM = BI_DANCEMODELLOSE;
-
-		int fileIndex;
-		int drmCb = LOAD_DramFileCallback;
-
-		// Loop through 3 podium models
-		for (int i = 0; i < 3; i++)
+		// podium first place
+		if ((ptrIndexArr[0] != 0) && (ptrIndexArr[0] != STATIC_OXIDEDANCE))
 		{
-			if (ptrIndexArr[i] != 0)
-			{
-				fileIndex = baseIndexPM + iVar9 + (ptrIndexArr[i] - 0x7e) * 2;
+			fileIndex = BI_DANCEMODELWIN + iVar9 + (ptrIndexArr[0] - STATIC_CRASHDANCE) * 2;
+			LOAD_AppendQueue(0, LT_GETADDR, fileIndex, &ptrModelPtrArr[0], setPtrCb);
+		}
 
-				LOAD_AppendQueue(0, LT_GETADDR, fileIndex, &ptrModelPtrArr[i], drmCb);
-			}
+		// podium second place
+		if (ptrIndexArr[1] != 0)
+		{
+			fileIndex = BI_DANCEMODELLOSE + iVar9 + (ptrIndexArr[1] - STATIC_CRASHDANCE) * 2;
+			LOAD_AppendQueue(0, LT_GETADDR, fileIndex, &ptrModelPtrArr[1], setPtrCb);
+		}
 
-			baseIndexPM = BI_DANCEMODELLOSE;
+		// podium third place
+		if (ptrIndexArr[2] != 0)
+		{
+			fileIndex = BI_DANCEMODELLOSE + iVar9 + (ptrIndexArr[2] - STATIC_CRASHDANCE) * 2;
+			LOAD_AppendQueue(0, LT_GETADDR, fileIndex, &ptrModelPtrArr[2], setPtrCb);
 		}
 
 		// TAWNA
 		fileIndex = BI_DANCETAWNAGIRL + iVar9 + (gGT->podium_modelIndex_tawna - STATIC_TAWNA1) * 2;
 
 		// add TAWNA to loading queue
-		LOAD_AppendQueue(0, LT_GETADDR, fileIndex, (void *)&data.podiumModel_tawna, drmCb);
+		LOAD_AppendQueue(0, LT_GETADDR, fileIndex, (void *)&data.podiumModel_tawna, setPtrCb);
 
 		// if 0x7e+5 (dingo)
 		if (gGT->podium_modelIndex_First == STATIC_DINGODANCE)
 		{
 			// add "DingoFire" to loading queue
-			LOAD_AppendQueue(0, LT_GETADDR, BI_DINGOFIRE + iVar9, (void *)&data.podiumModel_dingoFire, drmCb);
+			LOAD_AppendQueue(0, LT_GETADDR, BI_DINGOFIRE + iVar9, (void *)&data.podiumModel_dingoFire, setPtrCb);
 		}
 
 		// add Podium
-		LOAD_AppendQueue(0, LT_GETADDR, BI_PODIUM + iVar9, &data.podiumModel_podiumStands, drmCb);
+		LOAD_AppendQueue(0, LT_GETADDR, BI_PODIUM + iVar9, NULL, LOAD_Callback_Podiums);
 
 		// Disable LEV instances on Adv Hub, for podium scene
 		gGT->gameMode2 = gGT->gameMode2 | 0x100;

@@ -162,7 +162,13 @@ void MainFrame_RenderFrame(struct GameTracker *gGT, struct GamepadSystem *gGamep
 				PickupBots_Update();
 			}
 
-			PlayLevel_UpdateLapStats();
+#if defined(CTR_NATIVE)
+			// NOTE(aalhendi): Native menu/adventure-hub LEVs may publish no
+			// restart table. Retail lap stats assume the table exists whenever
+			// this caller reaches them; keep the ASM-verified lap function intact.
+			if ((gGT->level1 != NULL) && (gGT->level1->ptr_restart_points != NULL) && (gGT->level1->cnt_restart_points != 0))
+#endif
+				PlayLevel_UpdateLapStats();
 		}
 	}
 
