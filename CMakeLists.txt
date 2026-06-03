@@ -39,9 +39,27 @@ add_subdirectory(externals/SDL)
 target_include_directories(SDL2-static PUBLIC externals/SDL/include)
 
 # PsyCross
-file(GLOB_RECURSE PSYCROSS_C externals/PsyCross/*.c externals/PsyCross/*.C)
-file(GLOB_RECURSE PSYCROSS_CPP externals/PsyCross/*.cpp)
-list(REMOVE_ITEM PSYCROSS_CPP ${CMAKE_SOURCE_DIR}/externals/PsyCross/src/audio/PsyX_SPUAL.cpp)
+# NOTE(aalhendi): limit native target to PsyCross units that ctr_native links atm.
+set(PSYCROSS_C
+    externals/PsyCross/src/psx/INLINE_C.C
+    externals/PsyCross/src/psx/LIBAPI.C
+    externals/PsyCross/src/psx/LIBCD.C
+    externals/PsyCross/src/psx/LIBETC.C
+    externals/PsyCross/src/psx/LIBGPU.C
+    externals/PsyCross/src/psx/LIBGTE.C
+    externals/PsyCross/src/psx/LIBPAD.C
+    externals/PsyCross/src/psx/LIBSN.C
+    externals/PsyCross/src/psx/LIBSPU.C
+    externals/PsyCross/src/render/glad.c
+)
+set(PSYCROSS_CPP
+    externals/PsyCross/src/PsyX_main.cpp
+    externals/PsyCross/src/gpu/PsyX_GPU.cpp
+    externals/PsyCross/src/gte/PsyX_GTE.cpp
+    externals/PsyCross/src/pad/PsyX_pad.cpp
+    externals/PsyCross/src/render/PsyX_render.cpp
+    externals/PsyCross/src/util/crash_handler.cpp
+)
 set_source_files_properties(${PSYCROSS_C} PROPERTIES LANGUAGE C)
 set_source_files_properties(${PSYCROSS_CPP} PROPERTIES LANGUAGE CXX)
 add_library(psycross STATIC ${PSYCROSS_C} ${PSYCROSS_CPP})
@@ -49,20 +67,6 @@ target_include_directories(psycross PUBLIC externals/PsyCross/include externals/
 target_compile_definitions(psycross PRIVATE USE_EXTENDED_PRIM_POINTERS=0)
 target_include_directories(psycross PRIVATE externals/SDL/include)
 target_link_libraries(psycross SDL2-static)
-
-if(WIN32)
-    set(_P "_")
-else()
-    set(_P "")
-endif()
-add_custom_command(TARGET psycross POST_BUILD
-    COMMAND ${CMAKE_OBJCOPY}
-        --redefine-sym ${_P}VSync=${_P}_psx_VSync
-        --redefine-sym ${_P}VSyncCallback=${_P}_psx_VSyncCallback
-        $<TARGET_FILE:psycross> $<TARGET_FILE:psycross>.fixed
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:psycross>.fixed $<TARGET_FILE:psycross>
-    COMMENT "Renaming conflicting PsyCross VSync symbol"
-)
 
 # CTR Native
 add_executable(ctr_native ${GAME_SOURCES})
