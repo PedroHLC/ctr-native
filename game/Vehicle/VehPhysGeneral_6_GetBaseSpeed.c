@@ -63,9 +63,8 @@ int VehPhysGeneral_GetBaseSpeed(struct Driver *driver)
 
 	if (driver->clockReceive != 0)
 	{
-		// if in 1st place, DamagedSpeed
-		// if in 8th place, zero
-		int clockEffect = driver->const_DamagedSpeed * ((0x14 - driver->driverRank) >> 4);
+		// NOTE(aalhendi) Retail scales clock damage by rank: stronger near the front, still nonzero near the back.
+		int clockEffect = (driver->const_DamagedSpeed * (0x14 - driver->driverRank)) >> 4;
 
 		if (subtract < clockEffect)
 			subtract = clockEffect;
